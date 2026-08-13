@@ -1,0 +1,334 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Power profile helper for Fedora laptops using Intel P-State.
+# Installed system-wide by modules/90-power-mode.sh.
+
+VERSION="1.0.0"
+CONFIG_FILE="${LPM_CONFIG_FILE:-/etc/laptop-power-mode.conf}"
+PSTATE_DIR="${LPM_PSTATE_DIR:-/sys/devices/system/cpu/intel_pstate}"
+PLATFORM_PROFILE="${LPM_PLATFORM_PROFILE:-/sys/firmware/acpi/platform_profile}"
+
+LPM_DEFAULT_MODE="dev"
+LPM_DEV_MAX=60
+LPM_QUIET_MAX=45
+LPM_MIN_PERF=10
+LPM_SHOW_STATUS_AFTER_SET="${LPM_SHOW_STATUS_AFTER_SET:-true}"
+
+notice() { printf 'NOTICE: %s\n' "$*" >&2; }
+die()    { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+
+load_config() {
+  if [[ -r "$CONFIG_FILE" ]]; then
+    # The file is installed root-owned and contains only scalar settings.
+    # shellcheck disable=SC1090
+    source "$CONFIG_FILE"
+  fi
+}
+
+validate_integer_range() {
+  local label=$1 value=$2 minimum=$3 maximum=$4
+  [[ "$value" =~ ^[0-9]+$ ]] || die "$label must be an integer."
+  (( value >= minimum && value <= maximum )) ||
+    die "$label must be between $minimum and $maximum."
+}
+
+validate_config() {
+  case "$LPM_DEFAULT_MODE" in
+    dev|quiet|normal|full) ;;
+    *) die "Invalid LPM_DEFAULT_MODE: $LPM_DEFAULT_MODE" ;;
+  esac
+
+  validate_integer_range LPM_DEV_MAX "$LPM_DEV_MAX" 20 100
+  validate_integer_range LPM_QUIET_MAX "$LPM_QUIET_MAX" 20 100
+  validate_integer_range LPM_MIN_PERF "$LPM_MIN_PERF" 0 100
+}
+
+need_root() {
+  if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+    exec sudo -- "$0" "$@"
+  fi
+}
+
+write_value() {
+  local file=$1 value=$2
+  [[ -e "$file" ]] || die "Missing kernel interface: $file"
+  [[ -w "$file" ]] || die "Kernel interface is not writable: $file"
+  printf '%s\n' "$value" > "$file"
+}
+
+ensure_intel_pstate() {
+  [[ -d "$PSTATE_DIR" ]] ||
+    die "intel_pstate is not active; this helper currently supports Intel P-State only."
+  [[ -e "$PSTATE_DIR/max_perf_pct" ]] ||
+    die "Missing intel_pstate max_perf_pct interface."
+  [[ -e "$PSTATE_DIR/min_perf_pct" ]] ||
+    die "Missing intel_pstate min_perf_pct interface."
+  [[ -e "$PSTATE_DIR/no_turbo" ]] ||
+    die "Missing intel_pstate no_turbo interface."
+}
+
+ppd_mapping_from_file() {
+  local generic_profile=$1 file
+
+  for file in /etc/tuned/ppd.conf /usr/lib/tuned/ppd.conf; do
+    [[ -r "$file" ]] || continue
+    awk -F= -v wanted="$generic_profile" '
+      function trim(s) {
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+        return s
+      }
+      /^[[:space:]]*\[profiles\][[:space:]]*$/ { in_profiles=1; next }
+      /^[[:space:]]*\[/ { in_profiles=0 }
+      in_profiles && $0 !~ /^[[:space:]]*[#;]/ && NF >= 2 {
+        key=trim($1)
+        value=trim(substr($0, index($0, "=") + 1))
+        if (key == wanted) {
+          print value
+          exit
+        }
+      }
+    ' "$file"
+    return 0
+  done
+
+  return 1
+}
+
+tuned_profile_for() {
+  local generic_profile=$1 mapped=""
+
+  mapped="$(ppd_mapping_from_file "$generic_profile" 2>/dev/null || true)"
+  if [[ -n "$mapped" ]]; then
+    printf '%s\n' "$mapped"
+    return
+  fi
+
+  case "$generic_profile" in
+    power-saver) printf '%s\n' powersave ;;
+    balanced)    printf '%s\n' balanced ;;
+    performance) printf '%s\n' throughput-performance ;;
+    *) return 1 ;;
+  esac
+}
+
+tuned_profile_available() {
+  local requested=$1
+  tuned-adm list 2>/dev/null |
+    sed -nE 's/^[[:space:]]*-[[:space:]]*([^[:space:]]+).*/\1/p' |
+    grep -Fxq -- "$requested"
+}
+
+powerprofiles_profile_available() {
+  local requested=$1
+  powerprofilesctl list 2>/dev/null |
+    sed -nE 's/^[[:space:]]*\*?[[:space:]]*([^:[:space:]]+):.*/\1/p' |
+    grep -Fxq -- "$requested"
+}
+
+set_power_profile() {
+  local generic_profile=$1 tuned_profile=""
+
+  # Fedora Workstation 41+ uses TuneD/tuned-ppd by default.
+  if command -v tuned-adm >/dev/null 2>&1; then
+    if command -v systemctl >/dev/null 2>&1 &&
+       ! systemctl is-active --quiet tuned.service 2>/dev/null; then
+      systemctl start tuned.service
+    fi
+
+    tuned_profile="$(tuned_profile_for "$generic_profile")"
+    if tuned_profile_available "$tuned_profile"; then
+      tuned-adm profile "$tuned_profile"
+      # TuneD applies part of the profile asynchronously. Apply our cap after it.
+      sleep 1
+      printf 'Power manager: TuneD -> %s\n' "$tuned_profile"
+      return 0
+    fi
+
+    notice "TuneD profile '$tuned_profile' is unavailable."
+  fi
+
+  # Fallback for distributions still using power-profiles-daemon.
+  if command -v powerprofilesctl >/dev/null 2>&1 &&
+     powerprofiles_profile_available "$generic_profile"; then
+    powerprofilesctl set "$generic_profile"
+    sleep 1
+    printf 'Power manager: powerprofilesctl -> %s\n' "$generic_profile"
+    return 0
+  fi
+
+  notice "No usable power-profile manager was found; applying CPU limits only."
+}
+
+set_cpu_limits() {
+  local max_pct=$1 turbo_disabled=$2 min_pct=$LPM_MIN_PERF
+
+  validate_integer_range max_perf_pct "$max_pct" 20 100
+  validate_integer_range min_perf_pct "$min_pct" 0 100
+  (( min_pct <= max_pct )) || min_pct=$max_pct
+
+  ensure_intel_pstate
+
+  # Lower the minimum first, then apply the requested maximum cap.
+  write_value "$PSTATE_DIR/min_perf_pct" "$min_pct"
+  write_value "$PSTATE_DIR/max_perf_pct" "$max_pct"
+  write_value "$PSTATE_DIR/no_turbo" "$turbo_disabled"
+}
+
+read_file_or() {
+  local file=$1 fallback=$2
+  if [[ -r "$file" ]]; then
+    cat "$file"
+  else
+    printf '%s\n' "$fallback"
+  fi
+}
+
+show_status() {
+  local displayed_manager=false name policy min max current
+
+  echo "=== Configured default ==="
+  printf 'mode:      %s\n' "$LPM_DEFAULT_MODE"
+  printf 'dev max:   %s%%\n' "$LPM_DEV_MAX"
+  printf 'quiet max: %s%%\n' "$LPM_QUIET_MAX"
+
+  echo
+  echo "=== Power manager ==="
+  if command -v tuned-adm >/dev/null 2>&1; then
+    tuned-adm active 2>/dev/null || echo "TuneD: unavailable"
+    displayed_manager=true
+  fi
+  if command -v powerprofilesctl >/dev/null 2>&1; then
+    printf 'powerprofilesctl: '
+    powerprofilesctl get 2>/dev/null || echo "unavailable"
+    displayed_manager=true
+  fi
+  [[ "$displayed_manager" == true ]] || echo "No supported manager found"
+
+  echo
+  echo "=== Firmware platform profile ==="
+  printf 'active:  %s\n' "$(read_file_or "$PLATFORM_PROFILE" unavailable)"
+  printf 'choices: %s\n' "$(read_file_or "${PLATFORM_PROFILE}_choices" unavailable)"
+
+  echo
+  echo "=== CPU driver ==="
+  printf 'driver:   %s\n' "$(read_file_or /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver unavailable)"
+  printf 'governor: %s\n' "$(read_file_or /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor unavailable)"
+
+  echo
+  echo "=== Intel P-State limits ==="
+  for name in min_perf_pct max_perf_pct no_turbo turbo_pct; do
+    if [[ -r "$PSTATE_DIR/$name" ]]; then
+      printf '%-14s %s\n' "$name:" "$(cat "$PSTATE_DIR/$name")"
+    fi
+  done
+  [[ -d "$PSTATE_DIR" ]] || echo "intel_pstate unavailable"
+
+  echo
+  echo "=== Current policy frequencies ==="
+  for policy in /sys/devices/system/cpu/cpufreq/policy*; do
+    [[ -d "$policy" ]] || continue
+    min="$(read_file_or "$policy/scaling_min_freq" 0)"
+    max="$(read_file_or "$policy/scaling_max_freq" 0)"
+    current="$(read_file_or "$policy/scaling_cur_freq" 0)"
+    printf '%s: min=%s MHz, max=%s MHz, current=%s MHz\n' \
+      "$(basename "$policy")" "$((min / 1000))" "$((max / 1000))" "$((current / 1000))"
+  done
+}
+
+maybe_show_status() {
+  if [[ "$LPM_SHOW_STATUS_AFTER_SET" == true ]]; then
+    show_status
+  fi
+  return 0
+}
+
+apply_mode() {
+  local mode=$1 optional_pct=${2:-}
+
+  case "$mode" in
+    dev)
+      local dev_pct=${optional_pct:-$LPM_DEV_MAX}
+      validate_integer_range dev_percentage "$dev_pct" 20 100
+      set_power_profile balanced
+      set_cpu_limits "$dev_pct" 0
+      printf 'Development mode enabled: balanced, turbo enabled, max_perf_pct=%s%%.\n' "$dev_pct"
+      ;;
+    quiet)
+      local quiet_pct=${optional_pct:-$LPM_QUIET_MAX}
+      validate_integer_range quiet_percentage "$quiet_pct" 20 100
+      set_power_profile power-saver
+      set_cpu_limits "$quiet_pct" 0
+      printf 'Quiet mode enabled: power saving, turbo enabled, max_perf_pct=%s%%.\n' "$quiet_pct"
+      ;;
+    normal)
+      [[ -z "$optional_pct" ]] || die "normal does not accept a percentage."
+      set_power_profile balanced
+      set_cpu_limits 100 0
+      echo "Normal mode restored: balanced, full CPU range, turbo enabled."
+      ;;
+    full)
+      [[ -z "$optional_pct" ]] || die "full does not accept a percentage."
+      set_power_profile performance
+      set_cpu_limits 100 0
+      echo "Full-performance mode enabled."
+      ;;
+    *) die "Unknown mode: $mode" ;;
+  esac
+
+  maybe_show_status
+}
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  laptop-power-mode dev [20-100]
+      Balanced profile, turbo enabled, CPU capped at the configured 60% default.
+
+  laptop-power-mode quiet [20-100]
+      Power-saving profile, turbo enabled, CPU capped at the configured 45% default.
+
+  laptop-power-mode normal
+      Balanced profile, full CPU range and turbo enabled. Use before thermal tests.
+
+  laptop-power-mode full
+      Performance profile, full CPU range and turbo enabled. Intended for benchmarks.
+
+  laptop-power-mode default
+      Apply the default mode stored in /etc/laptop-power-mode.conf.
+
+  laptop-power-mode status
+      Show configured defaults, active profile, firmware profile and CPU limits.
+USAGE
+}
+
+load_config
+validate_config
+
+action=${1:-status}
+case "$action" in
+  dev|quiet|normal|full)
+    (( $# >= 1 && $# <= 2 )) || die "Invalid number of arguments."
+    need_root "$@"
+    apply_mode "$action" "${2:-}"
+    ;;
+  default)
+    (( $# == 1 )) || die "default does not accept arguments."
+    need_root "$@"
+    apply_mode "$LPM_DEFAULT_MODE"
+    ;;
+  status)
+    (( $# <= 1 )) || die "status does not accept arguments."
+    show_status
+    ;;
+  --version|-V)
+    printf 'laptop-power-mode %s\n' "$VERSION"
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
