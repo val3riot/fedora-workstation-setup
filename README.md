@@ -18,6 +18,7 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - DBeaver e Bruno via RPM;
 - Discord e Obsidian via Flatpak/Flathub;
 - Thunderbird e LibreOffice dai repository Fedora;
+- Dash to Dock e pulsanti minimizza/massimizza per GNOME;
 - Docker Engine CE, Buildx e Docker Compose V2;
 - Docker Engine in modalità Rootless vera, senza daemon root e senza gruppo `docker`;
 - Docker Desktop per Linux (installato, non avviato automaticamente);
@@ -42,9 +43,21 @@ Profilo minimo:
 ./install.sh --base
 ```
 
+## Wallpaper
+
+Inserisci uno o più file JPG, PNG o WebP nella cartella `wallpapers/`, quindi
+scegli quello da applicare a GNOME con:
+
+```bash
+./install.sh --set-wallpaper
+```
+
+Il comando mostra un elenco numerato e configura l'immagine scelta sia per il
+tema chiaro sia per quello scuro.
+
 ## Applicazioni desktop
 
-Le applicazioni desktop sono facoltative e non vengono installate dal profilo `--development`. La sezione comprende Thunderbird e LibreOffice dai repository Fedora, oltre a Discord e Obsidian per il solo utente da Flathub. Il setup è idempotente e configura automaticamente il remote `flathub`.
+Le applicazioni desktop sono facoltative e non vengono installate dal profilo `--development`. La sezione comprende Thunderbird e LibreOffice dai repository Fedora, Discord e Obsidian per il solo utente da Flathub, Dash to Dock e i pulsanti minimizza/massimizza nelle barre del titolo. Dash to Dock e i pulsanti vengono configurati solo quando è rilevata GNOME Shell; sugli altri desktop il passaggio viene saltato. Il setup è idempotente e configura automaticamente il remote `flathub`.
 
 Le applicazioni sono abilitate per impostazione predefinita e possono essere escluse in `config/local.env`:
 
@@ -53,6 +66,8 @@ INSTALL_DISCORD=false
 INSTALL_OBSIDIAN=false
 INSTALL_THUNDERBIRD=false
 INSTALL_LIBREOFFICE=false
+INSTALL_DASH_TO_DOCK=false
+ENABLE_WINDOW_BUTTONS=false
 ```
 
 Per installare soltanto la sezione desktop:
@@ -61,7 +76,7 @@ Per installare soltanto la sezione desktop:
 ./install.sh --desktop
 ```
 
-Questa modalità esegue esclusivamente `modules/70-desktop-apps.sh`: non modifica la shell o la configurazione Git e non richiede il riavvio della sessione. Al termine mostra `Sezione desktop completata` e indica il comando di verifica.
+Questa modalità esegue esclusivamente `modules/70-desktop-apps.sh` e non modifica la shell o la configurazione Git. Dopo la prima installazione di Dash to Dock potrebbe essere necessario un logout/login affinché GNOME carichi l’estensione; rilanciando `--desktop` verrà abilitata. Al termine lo script indica il comando di verifica.
 
 Per installare sia l'ambiente di sviluppo sia la sezione desktop:
 

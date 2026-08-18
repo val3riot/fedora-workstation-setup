@@ -6,8 +6,8 @@ load_config "$ROOT_DIR"
 
 SECTION="${1:-all}"
 case "$SECTION" in
-  all|flatpak|rpm|jetbrains) ;;
-  *) die "Sezione non valida: $SECTION. Usa: all, flatpak, rpm oppure jetbrains" ;;
+  all|flatpak|rpm|gnome|jetbrains) ;;
+  *) die "Sezione non valida: $SECTION. Usa: all, flatpak, rpm, gnome oppure jetbrains" ;;
 esac
 
 install_rpm_url() {
@@ -45,6 +45,32 @@ if [[ "$SECTION" == all || "$SECTION" == rpm ]] &&
   [[ "$INSTALL_THUNDERBIRD" == true ]] && desktop_rpm_packages+=(thunderbird)
   [[ "$INSTALL_LIBREOFFICE" == true ]] && desktop_rpm_packages+=(libreoffice)
   install_available_packages "${desktop_rpm_packages[@]}"
+fi
+
+if [[ "$SECTION" == all || "$SECTION" == gnome ]] &&
+   [[ "$INSTALL_DASH_TO_DOCK" == true || "$ENABLE_WINDOW_BUTTONS" == true ]]; then
+  if ! command_exists gnome-shell; then
+    warn "GNOME Shell non rilevata: configurazione Dash to Dock e pulsanti finestra saltata."
+  else
+    if [[ "$INSTALL_DASH_TO_DOCK" == true ]]; then
+      install_available_packages gnome-shell-extension-dash-to-dock
+      if command_exists gnome-extensions; then
+        if ! gnome-extensions enable dash-to-dock@micxgx.gmail.com; then
+          warn "Dash to Dock installata ma non ancora caricata da GNOME: esegui logout/login e rilancia --desktop."
+        fi
+      else
+        warn "gnome-extensions non disponibile: impossibile abilitare Dash to Dock."
+      fi
+    fi
+
+    if [[ "$ENABLE_WINDOW_BUTTONS" == true ]]; then
+      if command_exists gsettings; then
+        gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
+      else
+        warn "gsettings non disponibile: impossibile abilitare i pulsanti minimizza e massimizza."
+      fi
+    fi
+  fi
 fi
 
 if [[ "$SECTION" == all || "$SECTION" == rpm ]] &&

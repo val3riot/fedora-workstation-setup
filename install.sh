@@ -31,7 +31,10 @@ case "$MODE" in
     PROFILE=development
     INCLUDE_DESKTOP_APPS=true
     ;;
-  *) die "Opzione non valida: $MODE. Usa: --base, --development, --desktop oppure --all" ;;
+  --set-wallpaper)
+    exec "$ROOT_DIR/bin/set-wallpaper.sh"
+    ;;
+  *) die "Opzione non valida: $MODE. Usa: --base, --development, --desktop, --all oppure --set-wallpaper" ;;
 esac
 
 export ROOT_DIR PROFILE INCLUDE_DESKTOP_APPS
@@ -58,8 +61,13 @@ if [[ "$MODE" == --desktop ]]; then
   log "Sezione desktop completata"
   printf '%s\n' \
     "Le applicazioni desktop abilitate sono installate." \
-    "Verifica con: $ROOT_DIR/bin/doctor.sh" \
-    "Non è necessario riavviare la sessione."
+    "Verifica con: $ROOT_DIR/bin/doctor.sh"
+  if rpm -q gnome-shell-extension-dash-to-dock >/dev/null 2>&1 &&
+     ! gnome-extensions list --enabled 2>/dev/null | grep -Fqx dash-to-dock@micxgx.gmail.com; then
+    printf '%s\n' "Esegui logout/login per caricare Dash to Dock, quindi rilancia: $0 --desktop"
+  else
+    printf '%s\n' "Non è necessario riavviare la sessione."
+  fi
 else
   log "Setup completato"
   printf '%s\n' \

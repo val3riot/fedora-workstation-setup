@@ -39,6 +39,24 @@ check DBeaver dbeaver
 check Bruno bruno
 check Thunderbird thunderbird
 check LibreOffice libreoffice
+if command -v gnome-shell >/dev/null 2>&1; then
+  if command -v gnome-extensions >/dev/null 2>&1 &&
+     gnome-extensions list --enabled 2>/dev/null | grep -Fqx dash-to-dock@micxgx.gmail.com; then
+    printf 'OK   %-20s %s\n' 'Dash to Dock' 'abilitata'
+  elif rpm -q gnome-shell-extension-dash-to-dock >/dev/null 2>&1; then
+    printf 'WARN %-20s %s\n' 'Dash to Dock' 'installata ma non abilitata'
+  else
+    printf 'MISS %-20s\n' 'Dash to Dock'
+  fi
+  if command -v gsettings >/dev/null 2>&1; then
+    window_buttons="$(gsettings get org.gnome.desktop.wm.preferences button-layout 2>/dev/null)"
+    if [[ "$window_buttons" == *minimize* && "$window_buttons" == *maximize* ]]; then
+      printf 'OK   %-20s %s\n' 'Window buttons' "$window_buttons"
+    else
+      printf 'WARN %-20s %s\n' 'Window buttons' "$window_buttons"
+    fi
+  fi
+fi
 if command -v flatpak >/dev/null 2>&1 && flatpak info --user com.discordapp.Discord >/dev/null 2>&1; then
   printf 'OK   %-20s %s\n' 'Discord' 'com.discordapp.Discord (Flatpak)'
 else
