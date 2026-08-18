@@ -2,7 +2,13 @@
 set -Eeuo pipefail
 source "$ROOT_DIR/lib/common.sh"
 load_config "$ROOT_DIR"
-[[ "$PROFILE" == "development" ]] || exit 0
+[[ "${INCLUDE_DESKTOP_APPS:-false}" == true ]] || exit 0
+
+SECTION="${1:-all}"
+case "$SECTION" in
+  all|flatpak|rpm|jetbrains) ;;
+  *) die "Sezione non valida: $SECTION. Usa: all, flatpak, rpm oppure jetbrains" ;;
+esac
 
 install_rpm_url() {
   local package_name=$1 url=$2 output=$3
@@ -11,13 +17,38 @@ install_rpm_url() {
   sudo dnf install -y "$output"
 }
 
-if [[ "$INSTALL_DBEAVER" == true ]]; then
+install_flatpak_app() {
+  local app_id=$1
+  flatpak info --user "$app_id" >/dev/null 2>&1 && return 0
+  flatpak install --user --noninteractive -y flathub "$app_id"
+}
+
+if [[ "$SECTION" == all || "$SECTION" == flatpak ]] &&
+   [[ "$INSTALL_DISCORD" == true || "$INSTALL_OBSIDIAN" == true ]]; then
+  install_available_packages flatpak
+  command_exists flatpak || die "Flatpak non è disponibile: impossibile installare le app desktop."
+  flatpak remote-add --user --if-not-exists flathub "$FLATHUB_REPO_URL"
+
+  [[ "$INSTALL_DISCORD" == true ]] && install_flatpak_app com.discordapp.Discord
+  [[ "$INSTALL_OBSIDIAN" == true ]] && install_flatpak_app md.obsidian.Obsidian
+fi
+
+if [[ "$SECTION" == all || "$SECTION" == rpm ]] && [[ "$INSTALL_DBEAVER" == true ]]; then
   install_rpm_url dbeaver-ce \
     "$DBEAVER_RPM_URL" \
     "$TOOLS_DIR/tmp/dbeaver-ce-latest.x86_64.rpm"
 fi
 
-if [[ "$INSTALL_BRUNO" == true && ! -x /usr/bin/bruno ]]; then
+if [[ "$SECTION" == all || "$SECTION" == rpm ]] &&
+   [[ "$INSTALL_THUNDERBIRD" == true || "$INSTALL_LIBREOFFICE" == true ]]; then
+  desktop_rpm_packages=()
+  [[ "$INSTALL_THUNDERBIRD" == true ]] && desktop_rpm_packages+=(thunderbird)
+  [[ "$INSTALL_LIBREOFFICE" == true ]] && desktop_rpm_packages+=(libreoffice)
+  install_available_packages "${desktop_rpm_packages[@]}"
+fi
+
+if [[ "$SECTION" == all || "$SECTION" == rpm ]] &&
+   [[ "$INSTALL_BRUNO" == true && ! -x /usr/bin/bruno ]]; then
   bruno_url="$(curl -fsSL "$BRUNO_RELEASES_API_URL" | jq -r '.assets[] | select(.name | test("x86_64.*\\.rpm$|x86_64\\.rpm$"; "i")) | .browser_download_url' | head -n1)"
   if [[ -n "$bruno_url" && "$bruno_url" != null ]]; then
     install_rpm_url bruno "$bruno_url" "$TOOLS_DIR/tmp/bruno-latest.x86_64.rpm"
@@ -26,7 +57,8 @@ if [[ "$INSTALL_BRUNO" == true && ! -x /usr/bin/bruno ]]; then
   fi
 fi
 
-if [[ "$INSTALL_JETBRAINS_TOOLBOX" == true ]]; then
+if [[ "$SECTION" == all || "$SECTION" == jetbrains ]] &&
+   [[ "$INSTALL_JETBRAINS_TOOLBOX" == true ]]; then
   toolbox_base="$TOOLS_DIR/jetbrains-toolbox"
   mkdir -p "$toolbox_base"
   if ! find "$toolbox_base" -type f -name jetbrains-toolbox -perm -u+x | grep -q .; then

@@ -37,6 +37,18 @@ if command -v podman >/dev/null 2>&1; then
 fi
 check DBeaver dbeaver
 check Bruno bruno
+check Thunderbird thunderbird
+check LibreOffice libreoffice
+if command -v flatpak >/dev/null 2>&1 && flatpak info --user com.discordapp.Discord >/dev/null 2>&1; then
+  printf 'OK   %-20s %s\n' 'Discord' 'com.discordapp.Discord (Flatpak)'
+else
+  printf 'MISS %-20s\n' 'Discord'
+fi
+if command -v flatpak >/dev/null 2>&1 && flatpak info --user md.obsidian.Obsidian >/dev/null 2>&1; then
+  printf 'OK   %-20s %s\n' 'Obsidian' 'md.obsidian.Obsidian (Flatpak)'
+else
+  printf 'MISS %-20s\n' 'Obsidian'
+fi
 check OpenVPN openvpn
 check OpenConnect openconnect
 check TuneD tuned-adm
@@ -47,7 +59,7 @@ check 'Virt Install' virt-install
 check 'Vagrant' vagrant
 
 printf '\nGit include condizionali:\n'
-git config --global --get-regexp '^includeIf\.' 2>/dev/null || echo 'Nessun profilo Git aggiunto.'
+git config --global --get-regexp '^includeif\.' 2>/dev/null || echo 'Nessun profilo Git aggiunto.'
 
 printf '\nCartelle XDG:\n'
 for type in DESKTOP DOWNLOAD DOCUMENTS MUSIC PICTURES VIDEOS TEMPLATES PUBLICSHARE; do

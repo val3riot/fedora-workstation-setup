@@ -16,6 +16,8 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - VS Code tramite repository RPM Microsoft;
 - JetBrains Toolbox in `~/Tools`;
 - DBeaver e Bruno via RPM;
+- Discord e Obsidian via Flatpak/Flathub;
+- Thunderbird e LibreOffice dai repository Fedora;
 - Docker Engine CE, Buildx e Docker Compose V2;
 - Docker Engine in modalità Rootless vera, senza daemon root e senza gruppo `docker`;
 - Docker Desktop per Linux (installato, non avviato automaticamente);
@@ -31,14 +33,62 @@ Non installa Ansible, OpenTofu, Kubernetes o Helm. Installa KVM/QEMU + libvirt/v
 ```bash
 cp config/local.env.example config/local.env
 # modifica config/local.env se necessario
-./install.sh development
+./install.sh --development
 ```
 
 Profilo minimo:
 
 ```bash
-./install.sh base
+./install.sh --base
 ```
+
+## Applicazioni desktop
+
+Le applicazioni desktop sono facoltative e non vengono installate dal profilo `--development`. La sezione comprende Thunderbird e LibreOffice dai repository Fedora, oltre a Discord e Obsidian per il solo utente da Flathub. Il setup è idempotente e configura automaticamente il remote `flathub`.
+
+Le applicazioni sono abilitate per impostazione predefinita e possono essere escluse in `config/local.env`:
+
+```bash
+INSTALL_DISCORD=false
+INSTALL_OBSIDIAN=false
+INSTALL_THUNDERBIRD=false
+INSTALL_LIBREOFFICE=false
+```
+
+Per installare soltanto la sezione desktop:
+
+```bash
+./install.sh --desktop
+```
+
+Questa modalità esegue esclusivamente `modules/70-desktop-apps.sh`: non modifica la shell o la configurazione Git e non richiede il riavvio della sessione. Al termine mostra `Sezione desktop completata` e indica il comando di verifica.
+
+Per installare sia l'ambiente di sviluppo sia la sezione desktop:
+
+```bash
+./install.sh --all
+```
+
+Gli argomenti storici `base` e `development` restano accettati per compatibilità. `--develop` è un alias di `--development`.
+
+Per verificarne poi l’installazione:
+
+```bash
+flatpak info --user com.discordapp.Discord
+flatpak info --user md.obsidian.Obsidian
+rpm -q thunderbird libreoffice-core
+./bin/doctor.sh
+```
+
+## Aggiornamento del sistema e delle app
+
+Il modulo della shell configura l’alias:
+
+```bash
+update-a
+```
+
+che esegue in sequenza `sudo dnf upgrade --refresh -y` e `flatpak update -y`. L’aggiornamento Flatpak parte solo se quello Fedora termina correttamente.
 
 Controllo sintattico senza installare nulla:
 

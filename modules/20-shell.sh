@@ -26,6 +26,8 @@ export VAGRANT_HOME="$TOOLS_DIR/vagrant"
 export VAGRANT_DEFAULT_PROVIDER="$VAGRANT_DEFAULT_PROVIDER"
 export PATH="\$HOME/.local/bin:\$PATH"
 
+alias update-a='sudo dnf upgrade --refresh -y && flatpak update -y'
+
 [[ -s "\$NVM_DIR/nvm.sh" ]] && source "\$NVM_DIR/nvm.sh"
 [[ -s "\$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "\$SDKMAN_DIR/bin/sdkman-init.sh"
 [[ -f "$TOOLS_DIR/miniconda3/etc/profile.d/conda.sh" ]] && source "$TOOLS_DIR/miniconda3/etc/profile.d/conda.sh"
