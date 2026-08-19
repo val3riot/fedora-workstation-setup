@@ -26,6 +26,9 @@ export VAGRANT_HOME="$TOOLS_DIR/vagrant"
 export VAGRANT_DEFAULT_PROVIDER="$VAGRANT_DEFAULT_PROVIDER"
 export PATH="\$HOME/.local/bin:\$PATH"
 
+alias ll='ls -alF'
+alias gs='git status'
+alias ..='cd ..'
 alias update-a='sudo dnf upgrade --refresh -y && flatpak update -y'
 
 [[ -s "\$NVM_DIR/nvm.sh" ]] && source "\$NVM_DIR/nvm.sh"
