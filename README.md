@@ -8,7 +8,7 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - cartelle XDG standard in inglese (`Downloads`, `Documents`, `Pictures`, ecc.);
 - directory personali `~/Tools` e `~/Progetti`;
 - Zsh e Oh My Zsh;
-- strumenti di base, compilazione e diagnostica;
+- strumenti di base, compilazione e diagnostica, incluso il browser Gitk;
 - supporto per montare condivisioni SMB/CIFS tramite `cifs-utils`;
 - supporto OpenVPN e OpenConnect/Cisco-compatible;
 - SDKMAN con Java, Maven e Gradle;

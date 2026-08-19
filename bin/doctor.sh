@@ -12,6 +12,7 @@ check() {
 }
 
 check Git git
+check Gitk gitk
 check SSH ssh
 check Zsh zsh
 check Java java
