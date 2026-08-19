@@ -4,7 +4,3 @@ ZSH_THEME="robbyrussell"
 plugins=(git sudo)
 [[ -f "$ZSH/oh-my-zsh.sh" ]] && source "$ZSH/oh-my-zsh.sh"
 [[ -f "$HOME/.config/workstation-setup/env.zsh" ]] && source "$HOME/.config/workstation-setup/env.zsh"
-
-alias ll='ls -alF'
-alias gs='git status'
-alias ..='cd ..'

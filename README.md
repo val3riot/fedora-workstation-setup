@@ -87,6 +87,13 @@ Per installare sia l'ambiente di sviluppo sia la sezione desktop:
 
 Gli argomenti storici `base` e `development` restano accettati per compatibilità. `--develop` è un alias di `--development`.
 
+Per visualizzare una guida rapida dei comandi disponibili e degli alias creati,
+senza eseguire l'installazione:
+
+```bash
+./install.sh --info
+```
+
 Per verificarne poi l’installazione:
 
 ```bash
