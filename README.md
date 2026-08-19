@@ -9,6 +9,7 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - directory personali `~/Tools` e `~/Progetti`;
 - Zsh e Oh My Zsh;
 - strumenti di base, compilazione e diagnostica;
+- supporto per montare condivisioni SMB/CIFS tramite `cifs-utils`;
 - supporto OpenVPN e OpenConnect/Cisco-compatible;
 - SDKMAN con Java, Maven e Gradle;
 - NVM con Node LTS;
@@ -116,6 +117,34 @@ Verifica della workstation:
 ```bash
 ./bin/doctor.sh
 ```
+
+## Condivisioni SMB/CIFS
+
+Il pacchetto `cifs-utils` viene installato in entrambi i profili e fornisce
+`mount.cifs`, necessario per montare condivisioni SMB da terminale o tramite
+`/etc/fstab`.
+
+Verifica dell'installazione:
+
+```bash
+rpm -q cifs-utils
+command -v mount.cifs
+./bin/doctor.sh
+```
+
+Esempio di test con una condivisione SMB (sostituisci server, condivisione e
+utente):
+
+```bash
+sudo mkdir -p /mnt/smb-test
+sudo mount -t cifs //server/condivisione /mnt/smb-test \
+  -o username=utente,vers=3.0
+mountpoint /mnt/smb-test
+sudo umount /mnt/smb-test
+```
+
+La password viene richiesta interattivamente da `mount.cifs`, evitando di
+inserirla nella cronologia della shell.
 
 ## Cartelle standard in inglese
 

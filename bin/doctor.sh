@@ -69,6 +69,7 @@ else
 fi
 check OpenVPN openvpn
 check OpenConnect openconnect
+check 'SMB/CIFS' mount.cifs
 check TuneD tuned-adm
 check 'Power mode' laptop-power-mode
 check 'Virt Manager' virt-manager
