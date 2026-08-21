@@ -27,7 +27,7 @@ export VAGRANT_DEFAULT_PROVIDER="$VAGRANT_DEFAULT_PROVIDER"
 export PATH="\$HOME/.local/bin:\$PATH"
 
 alias ll='ls -alF'
-alias gs='git status'
+alias gst='git status'
 alias ..='cd ..'
 alias update-a='sudo dnf upgrade --refresh -y && flatpak update -y'
 

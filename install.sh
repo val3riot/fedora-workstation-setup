@@ -34,7 +34,7 @@ UTILITÀ E COMANDI DOPO IL SETUP
 
 ALIAS SHELL CREATI
   ll       -> ls -alF
-  gs       -> git status
+  gst      -> git status
   ..       -> cd ..
   update-a -> sudo dnf upgrade --refresh -y && flatpak update -y
 
