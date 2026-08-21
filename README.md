@@ -8,6 +8,7 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - cartelle XDG standard in inglese (`Downloads`, `Documents`, `Pictures`, ecc.);
 - directory personali `~/Tools` e `~/Progetti`;
 - Zsh e Oh My Zsh;
+- ambiente terminale Kitty + tmux, con tema Zsh/Starship opzionale coordinato;
 - strumenti di base, compilazione e diagnostica, incluso il browser Gitk;
 - supporto per montare condivisioni SMB/CIFS tramite `cifs-utils`;
 - supporto OpenVPN e OpenConnect/Cisco-compatible;
@@ -74,6 +75,65 @@ backup e rimuovere i due file gestiti. I pacchetti e Oh My Zsh non vengono rimos
 perché potrebbero essere usati da altre configurazioni personali. Se non servono ad
 altro, si possono inoltre eliminare i due plugin da
 `~/.oh-my-zsh/custom/plugins/` e `~/.local/bin/starship`.
+
+## Terminale: Kitty + tmux
+
+Kitty è il contenitore grafico: cura rendering GPU, font monospace Fedora, colori,
+scrollback, URL e clipboard. tmux è invece il workspace manager persistente per
+sessioni, window e pane. Entrambi vengono installati e configurati automaticamente
+dal profilo development e da `--all`; non fanno parte di `--base` o `--desktop`:
+
+```bash
+./install.sh --development
+# oppure: --all
+```
+
+Il tema Zsh/Starship, inclusi syntax highlighting e autosuggestions, resta una
+scelta separata tramite `--config-zsh-theme`; Kitty e tmux non ne duplicano la
+configurazione.
+
+Nessun flag avvia tmux automaticamente e nessuna sessione viene creata al login.
+Le configurazioni sono `~/.config/kitty/kitty.conf` e `~/.tmux.conf`. Se esiste un
+file personale non gestito, la prima esecuzione lo conserva accanto all'originale
+con suffisso `.workstation-setup.bak`; il backup non viene moltiplicato. Kitty si
+ricarica aprendo una nuova finestra (oppure con `kitty @ load-config` se il remote
+control è stato abilitato personalmente). tmux si ricarica con `Ctrl+b r`.
+
+Kitty mantiene `Ctrl+Shift+C`, `Ctrl+Shift+V` e `Ctrl+Shift+U` (URL hints); non
+definisce split o tab custom. Usa `xterm-kitty`, mentre tmux espone
+`tmux-256color` alle applicazioni e dichiara RGB/clipboard tramite
+`terminal-features`. `set-clipboard on` usa le sequenze terminale/OSC 52 e funziona
+su Wayland senza dipendere da helper X11; la copia resta semplicemente interna a
+tmux se il terminale esterno non offre la clipboard.
+
+tmux mantiene il prefix standard `Ctrl+b`. In breve: il server tmux ospita una o
+più sessioni; ogni sessione contiene window, e ogni window contiene pane.
+
+| Operazione | Comando / tasto |
+|---|---|
+| crea o collega `dev` | `tmux new -As dev` |
+| elenca / collega sessioni | `tmux ls` / `tmux attach -t nome` |
+| detach | `Ctrl+b d` |
+| nuova window / precedente / successiva | `Ctrl+b c` / `Ctrl+b p` / `Ctrl+b n` |
+| scegli sessione | `Ctrl+b s` |
+| split destra / sotto | `Ctrl+b \|` / `Ctrl+b -` |
+| naviga pane | `Ctrl+b h/j/k/l` |
+| ridimensiona di 5 celle | `Ctrl+b H/J/K/L` |
+| chiudi pane | `exit` oppure `Ctrl+b x` |
+| copy mode / copia selezione | `Ctrl+b [` / `v`, poi `y` |
+| reload config | `Ctrl+b r` |
+
+Su un host remoto non viene installato nulla. Con tmux annidato, `Ctrl+b Ctrl+b`
+invia il prefix al livello interno: lo stesso comportamento standard trasferibile
+ai server non configurati. Se un server non possiede la voce terminfo
+`xterm-kitty`, usare `kitten ssh host` al posto di `ssh host`: l'helper ufficiale
+Kitty trasferisce l'integrazione terminale necessaria senza installare tmux remoto.
+
+Per tornare al terminale precedente basta avviarlo normalmente: il setup non cambia
+le associazioni globali GNOME e non rimuove GNOME Terminal. Per disabilitare le
+configurazioni, rinominare i due file gestiti; per il rollback ripristinare i file
+`.workstation-setup.bak`, se presenti. I pacchetti restano installati perché possono
+essere usati da altre configurazioni.
 
 ## Wallpaper
 

@@ -2,6 +2,13 @@
 
 ## Novità v5
 
+### Terminale Kitty + tmux
+- aggiunti moduli separati Kitty e tmux, eseguiti dai profili `--development` e `--all`;
+- la feature Zsh/Starship esistente resta separata e non viene duplicata;
+- template scuri versionati, backup unico e installazione idempotente;
+- tmux conserva `Ctrl+b`, usa `tmux-256color`, RGB e clipboard terminale nativa;
+- aggiunti controlli doctor condizionali e parsing isolato della configurazione tmux.
+
 ### Tema Zsh opzionale
 - aggiunto `--config-zsh-theme`, combinabile con i profili esistenti;
 - aggiunti Starship e i plugin dai rispettivi upstream, con URL centralizzati;

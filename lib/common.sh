@@ -134,6 +134,15 @@ append_line_once() {
   grep -Fqx "$line" "$file" || printf '%s\n' "$line" >> "$file"
 }
 
+install_managed_config() {
+  local source_file=$1 target_file=$2 marker=$3 backup="${2}.workstation-setup.bak"
+  mkdir -p "$(dirname "$target_file")"
+  if [[ -e "$target_file" ]] && ! grep -Fq "$marker" "$target_file"; then
+    [[ -e "$backup" ]] || cp -p "$target_file" "$backup"
+  fi
+  install -m 0644 "$source_file" "$target_file"
+}
+
 download() {
   local url=$1 output=$2
   mkdir -p "$(dirname "$output")"

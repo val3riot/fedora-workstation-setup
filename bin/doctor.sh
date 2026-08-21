@@ -116,6 +116,62 @@ if [[ -f "$zsh_theme" ]] || grep -Fq '# >>> workstation-setup zsh theme >>>' "$H
   fi
 fi
 
+kitty_config="$HOME/.config/kitty/kitty.conf"
+if grep -Fq '# workstation-setup: managed kitty config' "$kitty_config" 2>/dev/null; then
+  printf '\nKitty opzionale:\n'
+  check Kitty kitty
+  [[ -r "$kitty_config" ]] && printf 'OK   %-20s %s\n' 'Kitty config' "$kitty_config" ||
+    printf 'MISS %-20s\n' 'Kitty config'
+  for setting in 'shell zsh' 'scrollback_lines 20000' 'detect_urls yes'; do
+    grep -Eq "^[[:space:]]*${setting}[[:space:]]*$" "$kitty_config" &&
+      printf 'OK   %-20s %s\n' 'Kitty setting' "$setting" ||
+      printf 'MISS %-20s %s\n' 'Kitty setting' "$setting"
+  done
+  duplicate_count="$(grep -Fc '# workstation-setup: managed kitty config' "$kitty_config" || true)"
+  [[ "$duplicate_count" == 1 ]] && printf 'OK   %-20s\n' 'Kitty managed file' ||
+    printf 'WARN %-20s %s\n' 'Kitty managed file' "marker: $duplicate_count"
+  if command -v kitty >/dev/null 2>&1; then
+    kitty --version 2>/dev/null | sed 's/^/OK   Kitty version        /'
+  fi
+fi
+
+tmux_config="$HOME/.tmux.conf"
+if grep -Fq '# workstation-setup: managed tmux config' "$tmux_config" 2>/dev/null; then
+  printf '\ntmux opzionale:\n'
+  check tmux tmux
+  [[ -r "$tmux_config" ]] && printf 'OK   %-20s %s\n' 'tmux config' "$tmux_config" ||
+    printf 'MISS %-20s\n' 'tmux config'
+  if command -v tmux >/dev/null 2>&1; then
+    tmux -V | sed 's/^/OK   tmux version         /'
+    doctor_socket="workstation-setup-doctor-$$"
+    if tmux -L "$doctor_socket" -f "$tmux_config" new-session -d -s workstation-setup-doctor 2>/dev/null; then
+      printf 'OK   %-20s\n' 'tmux parsing'
+      for query in 'mouse:on' 'default-terminal:tmux-256color' 'base-index:1' 'history-limit:100000'; do
+        option="${query%%:*}" expected="${query#*:}"
+        actual="$(tmux -L "$doctor_socket" show-options -gv "$option" 2>/dev/null || true)"
+        [[ "$actual" == "$expected" ]] && printf 'OK   %-20s %s=%s\n' 'tmux option' "$option" "$actual" ||
+          printf 'WARN %-20s %s=%s\n' 'tmux option' "$option" "${actual:-missing}"
+      done
+      pane_index="$(tmux -L "$doctor_socket" show-window-options -gv pane-base-index 2>/dev/null || true)"
+      renumber="$(tmux -L "$doctor_socket" show-options -gv renumber-windows 2>/dev/null || true)"
+      features="$(tmux -L "$doctor_socket" show-options -gv terminal-features 2>/dev/null || true)"
+      [[ "$pane_index" == 1 ]] && printf 'OK   %-20s %s\n' 'tmux option' 'pane-base-index=1' ||
+        printf 'WARN %-20s %s\n' 'tmux option' "pane-base-index=${pane_index:-missing}"
+      [[ "$renumber" == on ]] && printf 'OK   %-20s %s\n' 'tmux option' 'renumber-windows=on' ||
+        printf 'WARN %-20s %s\n' 'tmux option' "renumber-windows=${renumber:-missing}"
+      [[ "$features" == *'xterm-kitty:RGB:clipboard'* ]] &&
+        printf 'OK   %-20s %s\n' 'tmux true color' 'xterm-kitty:RGB:clipboard' ||
+        printf 'WARN %-20s\n' 'tmux true color'
+      tmux -L "$doctor_socket" kill-server 2>/dev/null || true
+    else
+      printf 'FAIL %-20s %s\n' 'tmux parsing' "$tmux_config"
+    fi
+  fi
+  duplicate_count="$(grep -Fc '# workstation-setup: managed tmux config' "$tmux_config" || true)"
+  [[ "$duplicate_count" == 1 ]] && printf 'OK   %-20s\n' 'tmux managed file' ||
+    printf 'WARN %-20s %s\n' 'tmux managed file' "marker: $duplicate_count"
+fi
+
 printf '\nGit include condizionali:\n'
 git config --global --get-regexp '^includeif\.' 2>/dev/null || echo 'Nessun profilo Git aggiunto.'
 
