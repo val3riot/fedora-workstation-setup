@@ -7,6 +7,9 @@
 - la feature Zsh/Starship esistente resta separata e non viene duplicata;
 - template scuri versionati, backup unico e installazione idempotente;
 - tmux conserva `Ctrl+b`, usa `tmux-256color`, RGB e clipboard terminale nativa;
+- OpenSSH resta il comando `ssh` standard; rimosso l'override automatico verso
+  `kitten ssh` e aggiunto un helper esplicito per installare `xterm-kitty` in
+  `~/.terminfo` sugli host remoti senza privilegi;
 - aggiunti controlli doctor condizionali e parsing isolato della configurazione tmux.
 
 ### Tema Zsh opzionale

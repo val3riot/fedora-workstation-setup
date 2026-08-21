@@ -33,6 +33,8 @@ UTILITÀ E COMANDI DOPO IL SETUP
   laptop-power-mode normal     Ripristina profilo bilanciato e CPU al 100%.
   laptop-power-mode full       Abilita il profilo per le massime prestazioni.
   laptop-power-mode default    Riapplica il profilo configurato.
+  install-kitty-terminfo-remote user@host
+                               Installa xterm-kitty per l'utente remoto via OpenSSH.
 
 ALIAS SHELL CREATI
   ll       -> ls -alF

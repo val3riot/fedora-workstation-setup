@@ -17,7 +17,13 @@ else
 fi
 
 mkdir -p "$HOME/.config/workstation-setup"
-cat > "$HOME/.config/workstation-setup/env.zsh" <<ENV
+env_file="$HOME/.config/workstation-setup/env.zsh"
+legacy_kitty_ssh_override=false
+if grep -Fq 'command kitten ssh "$@"' "$env_file" 2>/dev/null; then
+  legacy_kitty_ssh_override=true
+fi
+
+cat > "$env_file" <<ENV
 export TOOLS_DIR="$TOOLS_DIR"
 export PROJECTS_DIR="$PROJECTS_DIR"
 export NVM_DIR="$TOOLS_DIR/nvm"
@@ -35,6 +41,10 @@ alias update-a='sudo dnf upgrade --refresh -y && flatpak update -y'
 [[ -s "\$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "\$SDKMAN_DIR/bin/sdkman-init.sh"
 [[ -f "$TOOLS_DIR/miniconda3/etc/profile.d/conda.sh" ]] && source "$TOOLS_DIR/miniconda3/etc/profile.d/conda.sh"
 ENV
+
+if [[ "$legacy_kitty_ssh_override" == true ]]; then
+  log "Rimosso il precedente override di ssh verso kitten ssh da $env_file"
+fi
 
 current_shell="$(getent passwd "$USER" | cut -d: -f7)"
 zsh_path="$(command -v zsh || true)"

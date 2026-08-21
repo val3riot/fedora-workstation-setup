@@ -123,17 +123,51 @@ più sessioni; ogni sessione contiene window, e ogni window contiene pane.
 | copy mode / copia selezione | `Ctrl+b [` / `v`, poi `y` |
 | reload config | `Ctrl+b r` |
 
-Su un host remoto non viene installato nulla. Con tmux annidato, `Ctrl+b Ctrl+b`
-invia il prefix al livello interno: lo stesso comportamento standard trasferibile
-ai server non configurati. Se un server non possiede la voce terminfo
-`xterm-kitty`, usare `kitten ssh host` al posto di `ssh host`: l'helper ufficiale
-Kitty trasferisce l'integrazione terminale necessaria senza installare tmux remoto.
+Kitty usa correttamente `TERM=xterm-kitty`; il setup non sostituisce o avvolge il
+comando `ssh`, che rimane il client OpenSSH standard. Il collegamento si effettua
+sempre normalmente con `ssh user@host`. Se il sistema remoto conosce già
+`xterm-kitty` non serve altro; in caso contrario, dopo avere configurato l'accesso
+SSH, preparare una volta quella specifica combinazione utente/host con:
+
+```bash
+./bin/install-kitty-terminfo-remote user@host
+# oppure, dopo avere eseguito il setup:
+install-kitty-terminfo-remote user@host
+```
+
+L'helper legge localmente `xterm-kitty` con `infocmp`, lo invia tramite OpenSSH e lo
+compila sul remoto con `tic` in `~/.terminfo`, senza `sudo` e senza modificare shell,
+configurazione SSH o `TERM`. È idempotente e accetta anche alias di `~/.ssh/config`.
+Non effettua connessioni durante il normale setup. `kitten ssh` resta disponibile
+come funzione manuale di Kitty, ma non viene usato automaticamente né è necessario
+nel workflow predefinito.
+
+OpenSSH trasmette il valore di `TERM`, ma non il relativo database terminfo: non
+esiste quindi una configurazione esclusivamente locale di Kitty che possa rendere
+`xterm-kitty` disponibile su qualunque distribuzione remota. Per ottenere questo
+risultato senza preparare i singoli account bisognerebbe usare automaticamente
+`kitten ssh` oppure degradare `TERM`; il setup evita entrambe le modifiche.
+
+Con tmux annidato, `Ctrl+b Ctrl+b` invia il prefix al livello interno. Dopo avere
+installato il terminfo remoto, tmux può essere avviato da una sessione SSH con
+`TERM=xterm-kitty` e continua poi a esporre `tmux-256color` alle applicazioni.
 
 Per tornare al terminale precedente basta avviarlo normalmente: il setup non cambia
-le associazioni globali GNOME e non rimuove GNOME Terminal. Per disabilitare le
-configurazioni, rinominare i due file gestiti; per il rollback ripristinare i file
-`.workstation-setup.bak`, se presenti. I pacchetti restano installati perché possono
-essere usati da altre configurazioni.
+le associazioni globali GNOME per impostazione predefinita e non rimuove GNOME
+Terminal. Per fare in modo che le applicazioni compatibili aprano Kitty tramite il
+meccanismo standard di Fedora, abilitare questa opzione in `config/local.env`:
+
+```bash
+SET_KITTY_AS_DEFAULT_TERMINAL=true
+```
+
+L'opzione installa `xdg-terminal-exec` e gestisce
+`~/.config/xdg-terminals.list`, conservando l'eventuale file personale come
+`~/.config/xdg-terminals.list.workstation-setup.bak`. Per ripristinare la scelta
+precedente, rimettere al suo posto il backup oppure rimuovere il file gestito.
+Per disabilitare le configurazioni di Kitty e tmux, rinominare i rispettivi file
+gestiti; per il rollback ripristinare i file `.workstation-setup.bak`, se presenti.
+I pacchetti restano installati perché possono essere usati da altre configurazioni.
 
 ## Wallpaper
 

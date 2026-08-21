@@ -13,7 +13,18 @@ check() {
 
 check Git git
 check Gitk gitk
-check SSH ssh
+ssh_type="$(type -t ssh 2>/dev/null || true)"
+ssh_path="$(type -P ssh 2>/dev/null || true)"
+ssh_version=""
+if [[ -n "$ssh_path" ]]; then
+  ssh_version="$("$ssh_path" -V 2>&1 || true)"
+fi
+if [[ "$ssh_type" == file && "$ssh_path" == /usr/bin/ssh && "$ssh_version" == OpenSSH_* ]]; then
+  printf 'OK   %-20s %s\n' 'SSH OpenSSH' "$ssh_path"
+else
+  printf 'WARN %-20s %s\n' 'SSH OpenSSH' \
+    "tipo=${ssh_type:-non trovato}, path=${ssh_path:-non trovato}"
+fi
 check Zsh zsh
 check Java java
 check Maven mvn
@@ -132,6 +143,28 @@ if grep -Fq '# workstation-setup: managed kitty config' "$kitty_config" 2>/dev/n
     printf 'WARN %-20s %s\n' 'Kitty managed file' "marker: $duplicate_count"
   if command -v kitty >/dev/null 2>&1; then
     kitty --version 2>/dev/null | sed 's/^/OK   Kitty version        /'
+  fi
+  if rpm -q kitty-terminfo >/dev/null 2>&1; then
+    printf 'OK   %-20s %s\n' 'Kitty terminfo' "$(rpm -q kitty-terminfo)"
+  else
+    printf 'MISS %-20s\n' 'Kitty terminfo'
+  fi
+  if command -v infocmp >/dev/null 2>&1 && infocmp -x xterm-kitty >/dev/null 2>&1; then
+    printf 'OK   %-20s %s\n' 'xterm-kitty' 'infocmp riuscito'
+  else
+    printf 'MISS %-20s %s\n' 'xterm-kitty' 'infocmp non riuscito'
+  fi
+  check 'Terminfo helper' install-kitty-terminfo-remote
+fi
+
+terminal_list="${XDG_CONFIG_HOME:-$HOME/.config}/xdg-terminals.list"
+if grep -Fq '# workstation-setup: managed default terminal' "$terminal_list" 2>/dev/null; then
+  check 'xdg-terminal-exec' xdg-terminal-exec
+  if command -v xdg-terminal-exec >/dev/null 2>&1; then
+    default_terminal="$(xdg-terminal-exec --print-id 2>/dev/null || true)"
+    [[ "$default_terminal" == kitty.desktop ]] &&
+      printf 'OK   %-20s %s\n' 'Terminale default' "$default_terminal" ||
+      printf 'WARN %-20s %s\n' 'Terminale default' "${default_terminal:-non rilevato}"
   fi
 fi
 

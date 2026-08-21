@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [[ "${1:-}" == -V ]]; then
+  printf '%s\n' 'OpenSSH_10.0p1 test-fixture' >&2
+  exit 0
+fi
+
+[[ "${1:-}" == -- ]] || { printf '%s\n' 'ssh fixture: -- mancante' >&2; exit 2; }
+shift
+[[ "${1:-}" == test-host ]] || { printf 'ssh fixture: target inatteso: %s\n' "${1:-}" >&2; exit 2; }
+shift
+(( $# == 1 )) || { printf '%s\n' 'ssh fixture: comando remoto mancante' >&2; exit 2; }
+[[ -n "${TEST_REMOTE_HOME:-}" ]] || { printf '%s\n' 'ssh fixture: TEST_REMOTE_HOME mancante' >&2; exit 2; }
+
+HOME="$TEST_REMOTE_HOME" PATH="${TEST_REMOTE_PATH:-$PATH}" /usr/bin/bash -c "$1"
