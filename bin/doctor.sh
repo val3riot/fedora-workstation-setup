@@ -141,6 +141,23 @@ if grep -Fq '# workstation-setup: managed kitty config' "$kitty_config" 2>/dev/n
   duplicate_count="$(grep -Fc '# workstation-setup: managed kitty config' "$kitty_config" || true)"
   [[ "$duplicate_count" == 1 ]] && printf 'OK   %-20s\n' 'Kitty managed file' ||
     printf 'WARN %-20s %s\n' 'Kitty managed file' "marker: $duplicate_count"
+  copy_all_count="$(grep -Eic '^[[:space:]]*map[[:space:]]+ctrl\+shift\+a([[:space:]]|$)' "$kitty_config" || true)"
+  valid_copy_all_count="$(grep -Ecx '[[:space:]]*map[[:space:]]+ctrl\+shift\+a[[:space:]]+launch[[:space:]]+--stdin-source=@screen_scrollback[[:space:]]+--type=clipboard[[:space:]]*' "$kitty_config" || true)"
+  [[ "$copy_all_count" == 1 && "$valid_copy_all_count" == 1 ]] &&
+    printf 'OK   %-20s\n' 'Kitty copy all' ||
+    printf 'WARN %-20s %s\n' 'Kitty copy all' "mapping: $copy_all_count, validi: $valid_copy_all_count"
+  if grep -Eiq '^[[:space:]]*map[[:space:]]+ctrl\+a([[:space:]]|$)' "$kitty_config"; then
+    printf 'WARN %-20s %s\n' 'Kitty Ctrl+A' 'mapping custom rilevato'
+  else
+    printf 'OK   %-20s %s\n' 'Kitty Ctrl+A' 'libero per la shell'
+  fi
+  for mapping in \
+    'ctrl+shift+c copy_to_clipboard' \
+    'ctrl+shift+v paste_from_clipboard'; do
+    grep -Eq "^[[:space:]]*map[[:space:]]+${mapping//+/\\+}[[:space:]]*$" "$kitty_config" &&
+      printf 'OK   %-20s %s\n' 'Kitty mapping' "$mapping" ||
+      printf 'MISS %-20s %s\n' 'Kitty mapping' "$mapping"
+  done
   if command -v kitty >/dev/null 2>&1; then
     kitty --version 2>/dev/null | sed 's/^/OK   Kitty version        /'
   fi

@@ -99,12 +99,28 @@ con suffisso `.workstation-setup.bak`; il backup non viene moltiplicato. Kitty s
 ricarica aprendo una nuova finestra (oppure con `kitty @ load-config` se il remote
 control è stato abilitato personalmente). tmux si ricarica con `Ctrl+b r`.
 
-Kitty mantiene `Ctrl+Shift+C`, `Ctrl+Shift+V` e `Ctrl+Shift+U` (URL hints); non
-definisce split o tab custom. Usa `xterm-kitty`, mentre tmux espone
+Kitty mantiene queste scorciatoie per la clipboard:
+
+| Scorciatoia | Operazione |
+|---|---|
+| `Ctrl+Shift+A` | Copy entire terminal scrollback |
+| `Ctrl+Shift+C` | Copy selection |
+| `Ctrl+Shift+V` | Paste |
+
+`Ctrl+Shift+A` copia come testo semplice lo schermo e tutto lo scrollback
+disponibile nel buffer della finestra Kitty corrente. `Ctrl+A` resta volutamente
+libero e raggiunge shell/readline/Zsh con il significato standard di inizio riga.
+Kitty mantiene anche `Ctrl+Shift+U` per gli URL hints e non definisce split o tab
+custom. Usa `xterm-kitty`, mentre tmux espone
 `tmux-256color` alle applicazioni e dichiara RGB/clipboard tramite
 `terminal-features`. `set-clipboard on` usa le sequenze terminale/OSC 52 e funziona
 su Wayland senza dipendere da helper X11; la copia resta semplicemente interna a
 tmux se il terminale esterno non offre la clipboard.
+
+La scorciatoia è gestita da Kitty anche quando la finestra contiene tmux e non
+interferisce con il prefix `Ctrl+b`. Lo scrollback di Kitty non equivale però alla
+history interna di tmux: contenuto conservato soltanto da tmux (per esempio per
+l'uso dell'alternate screen) non può essere recuperato dal buffer esterno di Kitty.
 
 tmux mantiene il prefix standard `Ctrl+b`. In breve: il server tmux ospita una o
 più sessioni; ogni sessione contiene window, e ogni window contiene pane.
