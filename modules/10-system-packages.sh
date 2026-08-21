@@ -12,6 +12,7 @@ base_packages=(
   git gitk git-lfs openssh-clients curl wget rsync
   unzip zip tar gzip bzip2 xz jq tree
   zsh bash-completion xdg-user-dirs
+  gedit
   cifs-utils
 )
 
