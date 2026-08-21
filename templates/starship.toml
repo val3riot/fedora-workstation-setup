@@ -1,5 +1,5 @@
 add_newline = true
-format = "$directory$git_branch$git_status$git_state$docker_context$kubernetes$java$custom$nodejs$python$conda$vagrant$hostname$localip$cmd_duration$status$jobs$line_break$character"
+format = "$directory$git_branch$git_status$git_state$docker_context$kubernetes$java$maven$nodejs$python$conda$vagrant$hostname$localip$cmd_duration$status$jobs$line_break$character"
 
 [directory]
 style = "bold blue"
@@ -31,10 +31,8 @@ style = "bold cyan"
 format = "[java:$version ]($style)"
 style = "bold red"
 
-[custom.maven]
-command = "mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null"
-detect_files = ["pom.xml"]
-format = "[mvn:$output ]($style)"
+[maven]
+format = "[mvn(:$version) ]($style)"
 style = "bold yellow"
 
 [nodejs]
