@@ -7,6 +7,8 @@
 - aggiunti Starship e i plugin dai rispettivi upstream, con URL centralizzati;
 - configurazione separata e blocco `.zshrc` gestito, idempotente e con backup;
 - controlli condizionali aggiunti al doctor.
+- fissati versione/checksum di Starship, commit dei plugin e commit/checksum
+  dell'installer Oh My Zsh; una revisione non verificata non viene eseguita.
 
 ### Endpoint configurabili
 - aggiunto `config/sources.env` come unico punto per gli URL dei vendor;

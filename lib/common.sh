@@ -83,13 +83,24 @@ validate_config() {
 
   local source_name
   local -a source_vars=(
-    OH_MY_ZSH_INSTALL_URL STARSHIP_ARCHIVE_URL ZSH_SYNTAX_HIGHLIGHTING_REPO_URL
-    ZSH_AUTOSUGGESTIONS_REPO_URL SDKMAN_INSTALL_URL NVM_INSTALL_URL MINICONDA_INSTALLER_URL
+    OH_MY_ZSH_COMMIT OH_MY_ZSH_INSTALL_URL OH_MY_ZSH_INSTALL_SHA256
+    STARSHIP_VERSION STARSHIP_ARCHIVE_URL STARSHIP_ARCHIVE_SHA256
+    ZSH_SYNTAX_HIGHLIGHTING_REPO_URL ZSH_SYNTAX_HIGHLIGHTING_COMMIT
+    ZSH_AUTOSUGGESTIONS_REPO_URL ZSH_AUTOSUGGESTIONS_COMMIT
+    SDKMAN_INSTALL_URL NVM_INSTALL_URL MINICONDA_INSTALLER_URL
     DOCKER_REPO_URL DOCKER_DESKTOP_RPM_URL VSCODE_GPG_KEY_URL VSCODE_REPO_BASEURL
     FLATHUB_REPO_URL DBEAVER_RPM_URL BRUNO_RELEASES_API_URL JETBRAINS_TOOLBOX_API_URL
   )
   for source_name in "${source_vars[@]}"; do
     [[ -n "${!source_name-}" ]] || die "$source_name non può essere vuoto (config/sources.env)."
+  done
+
+  local digest_name
+  for digest_name in OH_MY_ZSH_COMMIT ZSH_SYNTAX_HIGHLIGHTING_COMMIT ZSH_AUTOSUGGESTIONS_COMMIT; do
+    [[ "${!digest_name}" =~ ^[0-9a-f]{40}$ ]] || die "$digest_name deve essere uno SHA Git completo."
+  done
+  for digest_name in OH_MY_ZSH_INSTALL_SHA256 STARSHIP_ARCHIVE_SHA256; do
+    [[ "${!digest_name}" =~ ^[0-9a-f]{64}$ ]] || die "$digest_name deve essere uno SHA-256 valido."
   done
 }
 

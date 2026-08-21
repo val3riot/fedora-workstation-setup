@@ -62,7 +62,9 @@ lista `plugins=(...)`. Starship mostra in modo contestuale directory, Git e oper
 in corso, Docker, Kubernetes/namespace, Java, Maven, Node, Python, Conda, Vagrant,
 durata dei comandi lenti, errori e job. Hostname e IPv4 compaiono soltanto via SSH.
 
-Gli URL dei tre download sono centralizzati in `config/sources.env`. I file gestiti sono `~/.config/starship.toml` e
+URL, versione Starship, checksum SHA-256 e commit completi dei plugin sono centralizzati
+in `config/sources.env`. Anche l'installer Oh My Zsh è fissato a un commit e verificato
+prima dell'esecuzione. I file gestiti sono `~/.config/starship.toml` e
 `~/.config/workstation-setup/zsh-theme.zsh`; `.zshrc` riceve un solo blocco marcato.
 Al primo intervento viene conservato `~/.zshrc.workstation-setup.bak`. Per modificare
 il tema si possono personalizzare i due file (una nuova esecuzione del flag ripristina
