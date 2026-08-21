@@ -78,6 +78,44 @@ check 'Virsh' virsh
 check 'Virt Install' virt-install
 check 'Vagrant' vagrant
 
+zsh_theme="$HOME/.config/workstation-setup/zsh-theme.zsh"
+if [[ -f "$zsh_theme" ]] || grep -Fq '# >>> workstation-setup zsh theme >>>' "$HOME/.zshrc" 2>/dev/null; then
+  printf '\nTema Zsh opzionale:\n'
+  check Zsh zsh
+  check Starship starship
+  [[ -r "$HOME/.config/starship.toml" ]] &&
+    printf 'OK   %-20s %s\n' 'Starship config' "$HOME/.config/starship.toml" ||
+    printf 'MISS %-20s\n' 'Starship config'
+  grep -Fq 'starship init zsh' "$zsh_theme" 2>/dev/null &&
+    printf 'OK   %-20s\n' 'Starship init' || printf 'MISS %-20s\n' 'Starship init'
+  if grep -Fq 'zsh-syntax-highlighting.zsh' "$zsh_theme" 2>/dev/null &&
+     { rpm -q zsh-syntax-highlighting >/dev/null 2>&1 ||
+       [[ -r "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] ||
+       [[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] ||
+       [[ -r /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; }; then
+    printf 'OK   %-20s\n' 'Syntax highlighting'
+  else
+    printf 'MISS %-20s\n' 'Syntax highlighting'
+  fi
+  if grep -Fq 'zsh-autosuggestions.zsh' "$zsh_theme" 2>/dev/null &&
+     { rpm -q zsh-autosuggestions >/dev/null 2>&1 ||
+       [[ -r "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] ||
+       [[ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] ||
+       [[ -r /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; }; then
+    printf 'OK   %-20s\n' 'Autosuggestions'
+  else
+    printf 'MISS %-20s\n' 'Autosuggestions'
+  fi
+  block_count="$(grep -Fc '# >>> workstation-setup zsh theme >>>' "$HOME/.zshrc" 2>/dev/null || true)"
+  [[ "$block_count" == 1 ]] && printf 'OK   %-20s\n' 'Blocco .zshrc' ||
+    printf 'WARN %-20s %s\n' 'Blocco .zshrc' "occorrenze: $block_count"
+  if grep -Eq "^[[:space:]]*alias[[:space:]]+gs=['\"]git status['\"]" "$HOME/.zshrc" "$zsh_theme" 2>/dev/null; then
+    printf 'WARN %-20s %s\n' 'Alias gs' "rilevato gs='git status'"
+  else
+    printf 'OK   %-20s %s\n' 'Alias gs' 'non definito dal setup'
+  fi
+fi
+
 printf '\nGit include condizionali:\n'
 git config --global --get-regexp '^includeif\.' 2>/dev/null || echo 'Nessun profilo Git aggiunto.'
 

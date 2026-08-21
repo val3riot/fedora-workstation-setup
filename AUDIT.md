@@ -2,6 +2,12 @@
 
 ## Novità v5
 
+### Tema Zsh opzionale
+- aggiunto `--config-zsh-theme`, combinabile con i profili esistenti;
+- aggiunti Starship e i plugin dai rispettivi upstream, con URL centralizzati;
+- configurazione separata e blocco `.zshrc` gestito, idempotente e con backup;
+- controlli condizionali aggiunti al doctor.
+
 ### Endpoint configurabili
 - aggiunto `config/sources.env` come unico punto per gli URL dei vendor;
 - migrati Oh My Zsh, SDKMAN, NVM, Miniconda, Docker, Docker Desktop, VS Code, DBeaver, Bruno e JetBrains Toolbox;

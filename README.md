@@ -44,6 +44,35 @@ Profilo minimo:
 ./install.sh --base
 ```
 
+## Tema Zsh/Starship opzionale
+
+La configurazione avanzata della shell non è abilitata implicitamente, così il setup
+non cambia il prompt o le preferenze Zsh di chi non la richiede. Si può aggiungere a
+qualunque profilo, oppure usare da sola con il profilo development predefinito:
+
+```bash
+./install.sh --development --config-zsh-theme
+# oppure
+./install.sh --config-zsh-theme
+```
+
+Installa `zsh` dai repository Fedora, Starship dal suo archivio ufficiale e i due
+plugin nei custom plugin di Oh My Zsh; riutilizza Oh My Zsh se presente e non modifica né duplica la
+lista `plugins=(...)`. Starship mostra in modo contestuale directory, Git e operazioni
+in corso, Docker, Kubernetes/namespace, Java, Maven, Node, Python, Conda, Vagrant,
+durata dei comandi lenti, errori e job. Hostname e IPv4 compaiono soltanto via SSH.
+
+Gli URL dei tre download sono centralizzati in `config/sources.env`. I file gestiti sono `~/.config/starship.toml` e
+`~/.config/workstation-setup/zsh-theme.zsh`; `.zshrc` riceve un solo blocco marcato.
+Al primo intervento viene conservato `~/.zshrc.workstation-setup.bak`. Per modificare
+il tema si possono personalizzare i due file (una nuova esecuzione del flag ripristina
+i template del repository). Per disabilitarlo basta rimuovere da `.zshrc` il blocco
+compreso tra `workstation-setup zsh theme`; per il rollback completo, ripristinare il
+backup e rimuovere i due file gestiti. I pacchetti e Oh My Zsh non vengono rimossi,
+perché potrebbero essere usati da altre configurazioni personali. Se non servono ad
+altro, si possono inoltre eliminare i due plugin da
+`~/.oh-my-zsh/custom/plugins/` e `~/.local/bin/starship`.
+
 ## Wallpaper
 
 Inserisci uno o più file JPG, PNG o WebP nella cartella `wallpapers/`, quindi

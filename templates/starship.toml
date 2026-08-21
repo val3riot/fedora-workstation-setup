@@ -1,0 +1,84 @@
+add_newline = true
+format = "$directory$git_branch$git_status$git_state$docker_context$kubernetes$java$custom$nodejs$python$conda$vagrant$hostname$localip$cmd_duration$status$jobs$line_break$character"
+
+[directory]
+style = "bold blue"
+truncation_length = 4
+truncate_to_repo = false
+
+[git_branch]
+format = "[git:$branch ]($style)"
+style = "bold purple"
+
+[git_status]
+format = "[$all_status$ahead_behind]($style)"
+style = "bold yellow"
+
+[git_state]
+format = "[git:$state( $progress_current/$progress_total) ]($style)"
+style = "bold yellow"
+
+[docker_context]
+format = "[docker:$context ]($style)"
+style = "bold blue"
+
+[kubernetes]
+disabled = false
+format = "[k8s:$context/$namespace ]($style)"
+style = "bold cyan"
+
+[java]
+format = "[java:$version ]($style)"
+style = "bold red"
+
+[custom.maven]
+command = "mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null"
+detect_files = ["pom.xml"]
+format = "[mvn:$output ]($style)"
+style = "bold yellow"
+
+[nodejs]
+format = "[node:$version ]($style)"
+style = "bold green"
+
+[python]
+format = "[py:$version( $virtualenv) ]($style)"
+style = "bold yellow"
+
+[conda]
+format = "[conda:$environment ]($style)"
+style = "bold green"
+ignore_base = false
+
+[vagrant]
+format = "[vm:$version ]($style)"
+style = "bold blue"
+
+[hostname]
+ssh_only = true
+format = "[ssh:$hostname ]($style)"
+style = "bold cyan"
+
+[localip]
+ssh_only = true
+disabled = false
+format = "[ipv4:$localipv4 ]($style)"
+style = "bold cyan"
+
+[cmd_duration]
+min_time = 2000
+format = "[took:$duration ]($style)"
+style = "bold yellow"
+
+[status]
+disabled = false
+format = "[exit:$status ]($style)"
+style = "bold red"
+
+[jobs]
+format = "[jobs:$number ]($style)"
+style = "bold cyan"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"

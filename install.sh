@@ -14,6 +14,8 @@ INSTALLAZIONE E VERIFICA
   ./install.sh --development   Installa l'ambiente di sviluppo (predefinito).
   ./install.sh --desktop       Installa soltanto le applicazioni desktop.
   ./install.sh --all           Installa sviluppo e applicazioni desktop.
+  ./install.sh --config-zsh-theme
+                               Aggiunge il tema Zsh/Starship opzionale.
   ./install.sh --set-wallpaper Sceglie e applica uno sfondo dalla cartella wallpapers/.
   ./bin/check-setup.sh          Controlla la sintassi senza installare nulla.
   ./bin/doctor.sh               Verifica lo stato della workstation.
@@ -60,31 +62,41 @@ command_exists sudo || die "sudo non è installato."
 load_config "$ROOT_DIR"
 validate_config
 
-MODE="${1:---development}"
-case "$MODE" in
-  base|--base)
-    PROFILE=base
-    INCLUDE_DESKTOP_APPS=false
-    ;;
-  development|--develop|--development)
-    PROFILE=development
-    INCLUDE_DESKTOP_APPS=false
-    ;;
-  --desktop)
-    PROFILE=development
-    INCLUDE_DESKTOP_APPS=true
-    ;;
-  --all)
-    PROFILE=development
-    INCLUDE_DESKTOP_APPS=true
-    ;;
-  --set-wallpaper)
-    exec "$ROOT_DIR/bin/set-wallpaper.sh"
-    ;;
-  *) die "Opzione non valida: $MODE. Usa: --base, --development, --desktop, --all, --set-wallpaper oppure --info" ;;
-esac
+MODE=--development
+PROFILE=development
+INCLUDE_DESKTOP_APPS=false
+CONFIG_ZSH_THEME=false
+profile_selected=false
 
-export ROOT_DIR PROFILE INCLUDE_DESKTOP_APPS
+while (($#)); do
+  case "$1" in
+    base|--base)
+      [[ "$profile_selected" == false ]] || die "Specifica un solo profilo."
+      MODE=--base; PROFILE=base; INCLUDE_DESKTOP_APPS=false; profile_selected=true
+      ;;
+    development|--develop|--development)
+      [[ "$profile_selected" == false ]] || die "Specifica un solo profilo."
+      MODE=--development; PROFILE=development; INCLUDE_DESKTOP_APPS=false; profile_selected=true
+      ;;
+    --desktop)
+      [[ "$profile_selected" == false ]] || die "Specifica un solo profilo."
+      MODE=--desktop; PROFILE=development; INCLUDE_DESKTOP_APPS=true; profile_selected=true
+      ;;
+    --all)
+      [[ "$profile_selected" == false ]] || die "Specifica un solo profilo."
+      MODE=--all; PROFILE=development; INCLUDE_DESKTOP_APPS=true; profile_selected=true
+      ;;
+    --config-zsh-theme) CONFIG_ZSH_THEME=true ;;
+    --set-wallpaper)
+      (( $# == 1 )) || die "--set-wallpaper non accetta altri argomenti."
+      exec "$ROOT_DIR/bin/set-wallpaper.sh"
+      ;;
+    *) die "Opzione non valida: $1. Usa --info per l'elenco dei comandi." ;;
+  esac
+  shift
+done
+
+export ROOT_DIR PROFILE INCLUDE_DESKTOP_APPS CONFIG_ZSH_THEME
 
 log "Controllo sintassi degli script"
 while IFS= read -r -d '' script; do
@@ -95,7 +107,8 @@ bash -n "$ROOT_DIR/bin/docker-runtime"
 
 for module in "$ROOT_DIR"/modules/*.sh; do
   module_name="$(basename "$module")"
-  if [[ "$MODE" == --desktop && "$module_name" != 70-desktop-apps.sh ]]; then
+  if [[ "$MODE" == --desktop && "$module_name" != 70-desktop-apps.sh &&
+        ! ( "$CONFIG_ZSH_THEME" == true && "$module_name" == 25-zsh-theme.sh ) ]]; then
     continue
   fi
   log "Modulo: $module_name"
