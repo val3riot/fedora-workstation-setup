@@ -81,6 +81,18 @@ else
 fi
 check OpenVPN openvpn
 check OpenConnect openconnect
+check LaTeX tex
+printf '\nCoding agents:\n'
+check Codex codex
+check Claude claude
+check Copilot copilot
+for agent_home in "$HOME/Tools/Agents/codex" "$HOME/Tools/Agents/claude" "$HOME/Tools/Agents/copilot"; do
+  if [[ -d "$agent_home" ]]; then
+    printf 'OK   %-20s %s\n' 'Agent home' "$agent_home"
+  else
+    printf 'MISS %-20s %s\n' 'Agent home' "$agent_home"
+  fi
+done
 check 'SMB/CIFS' mount.cifs
 check TuneD tuned-adm
 check 'Power mode' laptop-power-mode

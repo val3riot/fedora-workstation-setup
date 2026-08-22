@@ -26,6 +26,10 @@ fi
 cat > "$env_file" <<ENV
 export TOOLS_DIR="$TOOLS_DIR"
 export PROJECTS_DIR="$PROJECTS_DIR"
+export AGENTS_ROOT="$TOOLS_DIR/Agents"
+export CODEX_HOME="\$AGENTS_ROOT/codex"
+export CLAUDE_CONFIG_DIR="\$AGENTS_ROOT/claude"
+export COPILOT_HOME="\$AGENTS_ROOT/copilot"
 export NVM_DIR="$TOOLS_DIR/nvm"
 export SDKMAN_DIR="$TOOLS_DIR/sdkman"
 export VAGRANT_HOME="$TOOLS_DIR/vagrant"

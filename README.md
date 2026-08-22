@@ -15,6 +15,8 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - SDKMAN con Java, Maven e Gradle;
 - NVM con Node LTS;
 - Miniconda senza attivazione automatica di `base`;
+- LaTeX/TeX Live tramite i pacchetti ufficiali Fedora;
+- Codex, Claude Code e GitHub Copilot CLI con home sotto `~/Tools/Agents`;
 - VS Code tramite repository RPM Microsoft;
 - JetBrains Toolbox in `~/Tools`;
 - DBeaver e Bruno via RPM;

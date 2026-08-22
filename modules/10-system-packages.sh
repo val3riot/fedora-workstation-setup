@@ -18,6 +18,10 @@ base_packages=(
 
 install_available_packages "${base_packages[@]}"
 
+if [[ "$PROFILE" == "development" && "$INSTALL_LATEX" == true ]]; then
+  install_available_packages texlive-scheme-medium
+fi
+
 [[ "$PROFILE" == "base" ]] && exit 0
 
 dev_packages=(
