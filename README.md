@@ -16,7 +16,8 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - NVM con Node LTS;
 - Miniconda senza attivazione automatica di `base`;
 - LaTeX/TeX Live tramite i pacchetti ufficiali Fedora;
-- Codex, Claude Code e GitHub Copilot CLI tramite installer nativi ufficiali;
+- Codex, Claude Code e GitHub Copilot CLI opzionali (`INSTALL_AGENTS=true`),
+  tramite release e installer nativi ufficiali con versione e SHA-256 fissati;
 - VS Code tramite repository RPM Microsoft;
 - JetBrains Toolbox in `~/Tools`;
 - DBeaver e Bruno via RPM;
@@ -30,8 +31,6 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - Vagrant + provider libvirt per VM dichiarative e riproducibili;
 - configurazione Git multi-account e multi-server;
 - gestione energetica per laptop Intel tramite TuneD e `intel_pstate`.
-
-Non installa Ansible, OpenTofu, Kubernetes o Helm. Installa KVM/QEMU + libvirt/virt-manager per le VM locali.
 
 ## Uso
 
@@ -49,9 +48,7 @@ Profilo minimo:
 
 ## Tema Zsh/Starship opzionale
 
-La configurazione avanzata della shell non è abilitata implicitamente, così il setup
-non cambia il prompt o le preferenze Zsh di chi non la richiede. Si può aggiungere a
-qualunque profilo, oppure usare da sola con il profilo development predefinito:
+La configurazione avanzata della shell si abilita con:
 
 ```bash
 ./install.sh --development --config-zsh-theme
@@ -59,9 +56,8 @@ qualunque profilo, oppure usare da sola con il profilo development predefinito:
 ./install.sh --config-zsh-theme
 ```
 
-Installa `zsh` e i due plugin dai repository Fedora, Starship dal suo archivio
-upstream ufficiale; riutilizza Oh My Zsh se presente e non modifica né duplica la
-lista `plugins=(...)`. Starship mostra in modo contestuale directory, Git e operazioni
+Installa `zsh` e i due plugin dai repository Fedora e Starship dalla release
+upstream verificata. Starship mostra directory, Git e operazioni
 in corso, Docker, Kubernetes/namespace, Java, Maven, Node, Python, Conda, Vagrant,
 durata dei comandi lenti, errori e job. Hostname e IPv4 compaiono soltanto via SSH.
 
@@ -69,32 +65,20 @@ URL, versione Starship e checksum SHA-256 sono centralizzati
 in `config/sources.env`. Anche l'installer Oh My Zsh è fissato a un commit e verificato
 prima dell'esecuzione. I file gestiti sono `~/.config/starship.toml` e
 `~/.config/workstation-setup/zsh-theme.zsh`; `.zshrc` riceve un solo blocco marcato.
-Al primo intervento viene conservato `~/.zshrc.workstation-setup.bak`. Per modificare
-il tema si possono personalizzare i due file (una nuova esecuzione del flag ripristina
-i template del repository). Per disabilitarlo basta rimuovere da `.zshrc` il blocco
-compreso tra `workstation-setup zsh theme`; per il rollback completo, ripristinare il
-backup e rimuovere i due file gestiti. I pacchetti e Oh My Zsh non vengono rimossi,
-perché potrebbero essere usati da altre configurazioni personali. Se non servono ad
-altro, si possono inoltre eliminare i due plugin da
-`~/.oh-my-zsh/custom/plugins/` e `~/.local/bin/starship`.
+Al primo intervento viene conservato `~/.zshrc.workstation-setup.bak`.
 
 ## Terminale: Kitty + tmux
 
 Kitty è il contenitore grafico: cura rendering GPU, font monospace Fedora, colori,
 scrollback, URL e clipboard. tmux è invece il workspace manager persistente per
-sessioni, window e pane. Entrambi vengono installati e configurati automaticamente
-dal profilo development e da `--all`; non fanno parte di `--base` o `--desktop`:
+sessioni, window e pane. Entrambi sono installati e configurati dal profilo
+development e da `--all`:
 
 ```bash
 ./install.sh --development
 # oppure: --all
 ```
 
-Il tema Zsh/Starship, inclusi syntax highlighting e autosuggestions, resta una
-scelta separata tramite `--config-zsh-theme`; Kitty e tmux non ne duplicano la
-configurazione.
-
-Nessun flag avvia tmux automaticamente e nessuna sessione viene creata al login.
 Le configurazioni sono `~/.config/kitty/kitty.conf` e `~/.tmux.conf`. Se esiste un
 file personale non gestito, la prima esecuzione lo conserva accanto all'originale
 con suffisso `.workstation-setup.bak`; il backup non viene moltiplicato. Kitty si
@@ -170,10 +154,8 @@ Con tmux annidato, `Ctrl+b Ctrl+b` invia il prefix al livello interno. Dopo aver
 installato il terminfo remoto, tmux può essere avviato da una sessione SSH con
 `TERM=xterm-kitty` e continua poi a esporre `tmux-256color` alle applicazioni.
 
-Per tornare al terminale precedente basta avviarlo normalmente: il setup non cambia
-le associazioni globali GNOME per impostazione predefinita e non rimuove GNOME
-Terminal. Per fare in modo che le applicazioni compatibili aprano Kitty tramite il
-meccanismo standard di Fedora, abilitare questa opzione in `config/local.env`:
+Per impostare Kitty come terminale predefinito tramite il meccanismo standard di
+Fedora, usare in `config/local.env`:
 
 ```bash
 SET_KITTY_AS_DEFAULT_TERMINAL=true
@@ -181,11 +163,7 @@ SET_KITTY_AS_DEFAULT_TERMINAL=true
 
 L'opzione installa `xdg-terminal-exec` e gestisce
 `~/.config/xdg-terminals.list`, conservando l'eventuale file personale come
-`~/.config/xdg-terminals.list.workstation-setup.bak`. Per ripristinare la scelta
-precedente, rimettere al suo posto il backup oppure rimuovere il file gestito.
-Per disabilitare le configurazioni di Kitty e tmux, rinominare i rispettivi file
-gestiti; per il rollback ripristinare i file `.workstation-setup.bak`, se presenti.
-I pacchetti restano installati perché possono essere usati da altre configurazioni.
+`~/.config/xdg-terminals.list.workstation-setup.bak`.
 
 ## Wallpaper
 
@@ -201,7 +179,8 @@ tema chiaro sia per quello scuro.
 
 ## Applicazioni desktop
 
-Le applicazioni desktop sono facoltative e non vengono installate dal profilo `--development`. La sezione comprende Thunderbird e LibreOffice dai repository Fedora, Discord e Obsidian per il solo utente da Flathub, Dash to Dock e i pulsanti minimizza/massimizza nelle barre del titolo. Dash to Dock e i pulsanti vengono configurati solo quando è rilevata GNOME Shell; sugli altri desktop il passaggio viene saltato. Il setup è idempotente e configura automaticamente il remote `flathub`.
+La sezione desktop installa Thunderbird e LibreOffice dai repository Fedora,
+Discord e Obsidian per il singolo utente da Flathub e Dash to Dock per GNOME.
 
 Le applicazioni sono abilitate per impostazione predefinita e possono essere escluse in `config/local.env`:
 
@@ -220,7 +199,8 @@ Per installare soltanto la sezione desktop:
 ./install.sh --desktop
 ```
 
-Questa modalità esegue esclusivamente `modules/70-desktop-apps.sh` e non modifica la shell o la configurazione Git. Dopo la prima installazione di Dash to Dock potrebbe essere necessario un logout/login affinché GNOME carichi l’estensione; rilanciando `--desktop` verrà abilitata. Al termine lo script indica il comando di verifica.
+Questa modalità esegue `modules/70-desktop-apps.sh`. Dopo la prima installazione
+di Dash to Dock può essere necessario un logout/login per caricare l'estensione.
 
 Per installare sia l'ambiente di sviluppo sia la sezione desktop:
 
@@ -228,7 +208,7 @@ Per installare sia l'ambiente di sviluppo sia la sezione desktop:
 ./install.sh --all
 ```
 
-Gli argomenti storici `base` e `development` restano accettati per compatibilità. `--develop` è un alias di `--development`.
+`--develop` è un alias di `--development`.
 
 Per visualizzare una guida rapida dei comandi disponibili e degli alias creati,
 senza eseguire l'installazione:
@@ -454,7 +434,7 @@ docker-runtime desktop
 
 `docker-runtime desktop` ferma il daemon rootless prima di avviare Desktop; `docker-runtime rootless` ferma Desktop e torna al context `rootless`.
 
-Podman resta opzionale e non viene più installato di default:
+Podman si abilita con:
 
 ```bash
 INSTALL_PODMAN=true
@@ -472,22 +452,18 @@ Il valore predefinito resta `true`.
 
 ## Sicurezza e riproducibilità
 
-Il repository non conserva password, token, chiavi private, profili VPN o certificati aziendali.
-
-Alcuni strumenti vengono ancora scaricati dai relativi endpoint “latest” ufficiali. Questo rende il setup comodo ma non completamente riproducibile. Per una pipeline strettamente riproducibile restano da aggiungere version pinning e checksum per Oh My Zsh, SDKMAN, NVM, Miniconda, DBeaver, Bruno e JetBrains Toolbox.
-
-
-## Endpoint esterni centralizzati (v5)
-
 Gli URL usati dagli installer sono raccolti in:
 
 ```text
 config/sources.env
 ```
 
-Qui puoi cambiare in un solo punto gli endpoint di Oh My Zsh, SDKMAN, NVM, Miniconda, Docker, Docker Desktop, VS Code, DBeaver, Bruno e JetBrains Toolbox. `config/local.env` viene caricato dopo `sources.env`, quindi può sovrascrivere anche un singolo URL.
+Il file contiene fonti, versioni e SHA-256 di Oh My Zsh, Starship, NVM,
+Miniconda, Codex, Claude Code, Copilot CLI, Docker Desktop e DBeaver. Bruno e
+JetBrains Toolbox verificano i checksum pubblicati dalle rispettive API vendor.
+`config/local.env` può sovrascrivere i valori.
 
-## Docker Rootless (v5)
+## Docker Rootless
 
 Configurazione predefinita:
 
@@ -508,9 +484,7 @@ docker-runtime rootless
 docker-runtime desktop
 ```
 
-Non viene più usato il gruppo `docker`. Se viene rilevata una precedente appartenenza dovuta alla v4, il setup la rimuove; serve logout/login per aggiornare i gruppi della sessione corrente.
-
-## Virtualizzazione KVM/QEMU (v5)
+## Virtualizzazione KVM/QEMU
 
 Il profilo `development` installa:
 

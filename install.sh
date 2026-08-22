@@ -7,46 +7,45 @@ source "$ROOT_DIR/lib/common.sh"
 
 show_info() {
   cat <<'INFO'
-Fedora Workstation Setup - comandi rapidi
+Fedora Workstation Setup
 
-INSTALLAZIONE E VERIFICA
-  ./install.sh --base          Installa l'ambiente essenziale.
-  ./install.sh --development   Installa l'ambiente di sviluppo (predefinito).
-  ./install.sh --desktop       Installa soltanto le applicazioni desktop.
-  ./install.sh --all           Installa sviluppo e applicazioni desktop.
-  ./install.sh --config-zsh-theme
-                               Aggiunge il tema Zsh/Starship opzionale.
-  ./install.sh --set-wallpaper Sceglie e applica uno sfondo dalla cartella wallpapers/.
-  ./bin/check-setup.sh          Controlla la sintassi senza installare nulla.
-  ./bin/doctor.sh               Verifica lo stato della workstation.
+USO
+  ./install.sh [PROFILO] [OPZIONI]
 
-UTILITÀ E COMANDI DOPO IL SETUP
-  ./bin/add-git-identity.sh     Crea un'identità Git e il relativo alias SSH.
-  docker-runtime status        Mostra runtime e context Docker correnti.
-  docker-runtime rootless      Passa a Docker Engine rootless.
-  docker-runtime desktop       Passa a Docker Desktop.
-  laptop-power-mode status     Mostra profilo energetico e limiti CPU.
-  laptop-power-mode dev [20-100]
-                               Profilo bilanciato con limite CPU configurabile.
-  laptop-power-mode quiet [20-100]
-                               Profilo a basso consumo con limite CPU configurabile.
-  laptop-power-mode normal     Ripristina profilo bilanciato e CPU al 100%.
-  laptop-power-mode full       Abilita il profilo per le massime prestazioni.
-  laptop-power-mode default    Riapplica il profilo configurato.
+PROFILI
+  --base          Sistema essenziale, shell, rete e strumenti di base.
+  --development   Ambiente di sviluppo completo; profilo predefinito.
+  --desktop       Applicazioni desktop e configurazione GNOME.
+  --all           Ambiente di sviluppo e applicazioni desktop.
+
+OPZIONI
+  --config-zsh-theme  Installa e configura Starship e i plugin Zsh.
+  --set-wallpaper     Sceglie uno sfondo dalla cartella wallpapers/.
+  --help, --info, -h  Mostra questa guida.
+
+COMPONENTI PRINCIPALI
+  Development   Kitty, tmux, SDKMAN, Node/NVM, Miniconda, TeX Live,
+                Docker rootless/Desktop, VS Code, KVM/libvirt e Vagrant.
+  Desktop       DBeaver, Bruno, JetBrains Toolbox, Thunderbird,
+                LibreOffice, Discord, Obsidian e Dash to Dock.
+  Agenti AI     Codex, Claude Code e Copilot CLI; opt-in con
+                INSTALL_AGENTS=true in config/local.env.
+
+CONFIGURAZIONE
+  cp config/local.env.example config/local.env
+  Versioni, fonti e checksum: config/sources.env
+
+VERIFICA
+  ./bin/test.sh                 Suite completa del repository.
+  ./bin/doctor.sh               Stato della workstation.
+  ./bin/provenance-audit.sh     Provenienza del software installato.
+  ./bin/audit-urls.sh --online  Fonti e raggiungibilità degli endpoint.
+
+UTILITÀ
+  ./bin/add-git-identity.sh
+  docker-runtime status|rootless|desktop
+  laptop-power-mode status|dev|quiet|normal|full|default
   install-kitty-terminfo-remote user@host
-                               Installa xterm-kitty per l'utente remoto via OpenSSH.
-
-ALIAS SHELL CREATI
-  ll       -> ls -alF
-  gst      -> git status
-  ..       -> cd ..
-  update-a -> sudo dnf upgrade --refresh -y && flatpak update -y
-
-ALTRI ALIAS
-  nvm alias default -> versione indicata da NVM_NODE_VERSION (Node LTS di default)
-
-Gli eseguibili installati sono disponibili dopo aver riaperto la shell.
-I nomi degli alias SSH dipendono dai valori inseriti in add-git-identity.sh.
 INFO
 }
 

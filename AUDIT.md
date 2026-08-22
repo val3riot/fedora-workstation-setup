@@ -1,84 +1,70 @@
-# Audit di provenienza — 2026-08-22
+# Provenienza del software
 
-## Politica e controlli
+Il setup usa, in ordine di preferenza, repository Fedora, repository del vendor e
+release upstream ufficiali. URL, versioni e checksum sono definiti in
+`config/sources.env`.
 
-Il setup preferisce repository Fedora ufficiale, poi repository/installer vendor,
-poi release upstream ufficiale verificata. Registry generici, COPR, mirror, fork e
-repository community non sono automaticamente ufficiali. Gli URL runtime sono in
-`config/sources.env`; download statici e RPM diretti usano SHA-256, la chiave
-Docker anche la fingerprint pubblicata.
+## Software Fedora
+
+I seguenti componenti sono installati con DNF dai repository Fedora:
+
+| Categoria | Software |
+|---|---|
+| Sistema e shell | Git, Zsh, OpenSSH, Kitty, tmux, Gitk |
+| Plugin Zsh | `zsh-syntax-highlighting`, `zsh-autosuggestions` |
+| Sviluppo | compilatori, strumenti di build, Python, TeX Live medium |
+| Rete | `cifs-utils`, OpenVPN, OpenConnect |
+| Desktop | Thunderbird, LibreOffice, Dash to Dock |
+| Virtualizzazione | KVM/QEMU, libvirt, virt-manager, Vagrant |
+| Alimentazione | TuneD e supporto `intel_pstate` |
+
+Gli RPM Fedora sono verificati da DNF con le chiavi configurate dal sistema.
+
+## Release e installer verificati
+
+| Software | Versione | Fonte | Verifica |
+|---|---:|---|---|
+| Oh My Zsh | commit `d42209f2afa8ec3e6971e5b4695ff27f9d5670d2` | `ohmyzsh/ohmyzsh` | commit e SHA-256 installer |
+| Starship | 1.26.0 | release GitHub `starship/starship` | SHA-256 archivio |
+| NVM | 0.40.6 | `nvm-sh/nvm` | versione e SHA-256 installer |
+| Miniconda | py314_26.5.3-2 | Anaconda | versione e SHA-256 installer |
+| Codex | 0.149.0 | `releases.openai.com` | versione e SHA-256 bootstrap; checksum release verificato dall'installer |
+| Claude Code | 2.1.239 | `claude.ai` | versione e SHA-256 bootstrap; checksum release verificato dall'installer |
+| Copilot CLI | 1.0.80 | `gh.io` e release `github/copilot-cli` | versione e SHA-256 bootstrap; checksum release verificato dall'installer |
+| Docker Desktop | 4.87.0 | `desktop.docker.com` | versione e SHA-256 RPM |
+| DBeaver CE | 26.1.5 | `dbeaver.io` | versione e SHA-256 vendor |
+| Bruno | release corrente | `github.com/usebruno/bruno` | digest SHA-256 della release |
+| JetBrains Toolbox | release corrente | API JetBrains | checksum SHA-256 vendor |
+
+Codex, Claude Code e Copilot CLI sono installati solo con
+`INSTALL_AGENTS=true`. Durante i bootstrap, il setup rimuove dall'ambiente
+`GITHUB_TOKEN`, `GH_TOKEN`, `OPENAI_API_KEY` e `ANTHROPIC_API_KEY`.
+
+## Repository vendor
+
+| Software | Repository | Verifica |
+|---|---|---|
+| Docker Engine CE, Buildx, Compose V2 | Docker Fedora | chiave GPG e fingerprint Docker |
+| Visual Studio Code | Microsoft RPM | chiave GPG Microsoft |
+
+Docker Engine viene configurato in modalità rootless. Docker Desktop è installato
+dal proprio RPM verificato.
+
+## Flatpak
+
+Discord e Obsidian sono installati per il singolo utente da Flathub. Flathub è un
+repository comunitario e viene dichiarato esplicitamente come fonte di terza parte.
+
+## Controlli
 
 ```bash
-./bin/provenance-audit.sh       # locale, senza Internet
-./bin/audit-urls.sh             # policy/centralizzazione URL
-./bin/audit-urls.sh --online    # raggiungibilità endpoint
-./bin/check-secrets.sh
 ./bin/test.sh
-./bin/doctor.sh                 # include provenance locale
+./bin/provenance-audit.sh
+./bin/audit-urls.sh --online
+./bin/check-secrets.sh
 ```
 
-## Coding agents
-
-| Agente | Vendor e documentazione verificata | Metodo ufficiale corrente | Setup/workstation dopo audit |
-|---|---|---|---|
-| Codex 0.149.0 | OpenAI, `learn.chatgpt.com/docs/codex/cli` | standalone `chatgpt.com/codex/install.sh` | `~/.local/bin/codex` → release sotto `~/.codex` |
-| Claude Code 2.1.239 | Anthropic, `code.claude.com/docs/en/setup` | native `claude.ai/install.sh` | `~/.local/bin/claude` → `~/.local/share/claude/versions/2.1.239` |
-| Copilot CLI | GitHub, guida ufficiale Copilot CLI | `gh.io/copilot-install` (o Homebrew) | checksum installer verificato, `~/.local/bin/copilot` |
-
-Homebrew non è stato introdotto perché assente. I package npm legacy
-`@openai/codex`, `@anthropic-ai/claude-code` e `@github/copilot` sono rimossi e
-controllati come assenti. Ogni agente ha una sola destinazione nel `PATH`.
-Autenticazione e configurazioni sono state preservate; i test mostrano soltanto
-`authentication present: yes/no`.
-
-## Risultato software
-
-| Software | Versione | Path/metodo | Fonte | Verifica/azione |
-|---|---:|---|---|---|
-| Git, Zsh, Kitty, tmux, OpenSSH | Fedora 44 corrente | `/usr/bin`, RPM | Fedora ufficiale | conformi |
-| Plugin Zsh | 0.8.0 / 0.7.1 | RPM | Fedora ufficiale | migrati dai clone ai pacchetti Fedora |
-| Oh My Zsh | commit fissato | clone ufficiale | upstream ufficiale | origin e installer/checksum verificati |
-| Starship | 1.26.0 | `~/.local/bin` | release upstream | SHA-256 verificato |
-| Java/Maven/Gradle | 21.0.12 Temurin / 3.9.16 / 9.7.0 | SDKMAN | progetti ufficiali | conformi |
-| Node/NVM | 24.19.0 / 0.40.6 | `~/Tools/nvm` | `nvm-sh/nvm` | installer fissato e verificato |
-| Python/Miniconda | 3.14.7 / 26.5.3 | Fedora / Anaconda | ufficiali | installer esatto e SHA-256 |
-| Docker/Compose | 29.7.2 / 5.5.0 RPM | RPM vendor | Docker ufficiale | GPG/fingerprint; rootless configurato |
-| Docker Desktop | 4.87.0 | RPM diretto | Docker ufficiale | aggiornato, SHA-256 vendor |
-| VS Code | 1.134.0 | RPM | Microsoft ufficiale | repo e GPG conformi |
-| libvirt/QEMU/Vagrant | Fedora / 2.3.4 | RPM | Fedora ufficiale | Fedora scelto per `vagrant-libvirt` |
-| DBeaver | 26.1.5 | RPM diretto | DBeaver ufficiale | checksum; corretto bug symlink `%post` |
-| Bruno | 4.1.0 | RPM release | `usebruno/bruno` ufficiale | digest; gestito bug `%postun` upstream |
-| JetBrains Toolbox | 3.7.2 | `~/Tools` | JetBrains ufficiale | API e checksum vendor |
-| Discord | Flatpak | Flathub | community/unofficial | mantenuto per preservare dati/sessione; nessun RPM Fedora/vendor |
-| Obsidian | Flatpak | Flathub | verificato dal team, community-maintained | metodo indicato anche dal vendor |
-| Ollama | 0.32.14 | `/usr/local/bin`, preesistente | storia non attestabile | non gestito/non modificato; warning |
-
-Il COPR `phracek/PyCharm`, abilitato ma senza pacchetti installati, è stato rimosso.
-Gli IDE Toolbox e i dati utente non sono stati toccati. RPM Fusion, Google Chrome e
-OpenAI ChatGPT sono esterni al setup: inventariati ma non modificati.
-
-Docker Desktop installa intenzionalmente i propri plugin sotto
-`/usr/lib/docker/cli-plugins`, mentre Engine installa Compose/Buildx sotto
-`/usr/libexec/docker/cli-plugins`: entrambi sono RPM Docker ufficiali. Nella
-sessione audit `docker compose` seleziona il plugin Desktop 5.4.0 invece del plugin
-Engine 5.5.0. La coesistenza è documentata e non è stata alterata rimuovendo file
-posseduti dai rispettivi pacchetti vendor.
-
-## Esecuzione
-
-Dal parser corrente è stato ricavato ed eseguito:
-
-```bash
-./install.sh --all --config-zsh-theme
-```
-
-`--all` include già development e desktop; nel file locale ignorato è stato posto
-`SET_KITTY_AS_DEFAULT_TERMINAL=true`. Sono stati applicati TeX Live medium, agenti,
-Docker rootless/Desktop, virtualizzazione, app desktop, Kitty, tmux e tema Zsh.
-L'ultima ripresa si è fermata prima delle operazioni root del modulo power-mode per
-un prompt PolicyKit chiuso; su successiva richiesta dell'utente non sono state fatte
-altre richieste root. Tutto il resto e il provenance audit locale sono completati.
-Il controllo finale ha inoltre rilevato una preferenza GNOME preesistente, più
-prioritaria del file generico, che mantiene GNOME Terminal: il modulo è stato
-corretto per gestire anche quel file con backup, ma la correzione non è stata
-applicata alla home corrente dopo lo stop alle richieste di permesso.
+`bin/test.sh` controlla sintassi, ShellCheck, test funzionali, policy delle fonti,
+segreti tracciati e disabilitazioni TLS/GPG. `bin/provenance-audit.sh` verifica
+proprietario RPM, path degli eseguibili, repository configurati e duplicati nel
+`PATH`.

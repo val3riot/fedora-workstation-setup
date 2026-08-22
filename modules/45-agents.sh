@@ -39,10 +39,14 @@ remove_legacy_npm_agent() {
 }
 
 install_vendor_agent() {
-  local label=$1 url=$2 installer=$3
+  local label=$1 url=$2 installer=$3 expected_sha256=$4
+  shift 4
   log "Installazione $label dalla fonte ufficiale"
-  download "$url" "$installer"
-  bash "$installer"
+  download_verified "$url" "$installer" "$expected_sha256"
+  # I bootstrap non necessitano delle credenziali applicative. Non ereditarle:
+  # limita l'impatto anche in caso di compromissione della fonte vendor.
+  env -u GITHUB_TOKEN -u GH_TOKEN -u OPENAI_API_KEY -u ANTHROPIC_API_KEY \
+    bash "$installer" "$@"
 }
 
 # Le configurazioni, le sessioni e l'autenticazione non vengono rimosse.
@@ -53,17 +57,22 @@ remove_legacy_npm_agent '@github/copilot'
 install_vendor_agent \
   'OpenAI Codex (standalone)' \
   "$CODEX_INSTALL_URL" \
-  "$TOOLS_DIR/tmp/install-codex.sh"
+  "$TOOLS_DIR/tmp/install-codex.sh" \
+  "$CODEX_INSTALL_SHA256" \
+  --release "$CODEX_VERSION"
 
 install_vendor_agent \
   'Anthropic Claude Code (native)' \
   "$CLAUDE_INSTALL_URL" \
-  "$TOOLS_DIR/tmp/install-claude-code.sh"
+  "$TOOLS_DIR/tmp/install-claude-code.sh" \
+  "$CLAUDE_INSTALL_SHA256" \
+  "$CLAUDE_VERSION"
 
 log 'Installazione GitHub Copilot CLI dallo script ufficiale'
 copilot_installer="$TOOLS_DIR/tmp/install-copilot-cli.sh"
-download "$COPILOT_INSTALL_URL" "$copilot_installer"
-PREFIX="$HOME/.local" bash "$copilot_installer"
+download_verified "$COPILOT_INSTALL_URL" "$copilot_installer" "$COPILOT_INSTALL_SHA256"
+env -u GITHUB_TOKEN -u GH_TOKEN -u OPENAI_API_KEY -u ANTHROPIC_API_KEY \
+  VERSION="$COPILOT_VERSION" PREFIX="$HOME/.local" bash "$copilot_installer"
 
 for executable in codex claude copilot; do
   [[ -x "$HOME/.local/bin/$executable" ]] ||

@@ -16,14 +16,14 @@ esac
 
 failed=0
 if rg -n 'https?://' "$ROOT_DIR/install.sh" "$ROOT_DIR/lib" "$ROOT_DIR/modules" "$ROOT_DIR/bin" \
-  --glob '!audit-urls.sh' --glob '!provenance-audit.sh'; then
+  --glob '!**/audit-urls.sh' --glob '!**/provenance-audit.sh'; then
   printf '%s\n' 'FAIL URL runtime hardcoded fuori da config/sources.env' >&2
   failed=1
 else
   printf '%s\n' 'OK   URL runtime centralizzati in config/sources.env'
 fi
 
-if rg -n --glob '!.git/**' --glob '!bin/audit-urls.sh' -- \
+if rg -n --glob '!.git/**' --glob '!**/audit-urls.sh' -- \
   '--nogpgcheck|sslverify[[:space:]]*=[[:space:]]*false|curl[^#\n]*[[:space:]]-k([[:space:]]|$)|wget[^#\n]*--no-check-certificate' \
   "$ROOT_DIR"; then
   printf '%s\n' 'FAIL opzione di verifica TLS/GPG disabilitata' >&2
@@ -38,7 +38,7 @@ classify_url() {
     https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/*|https://raw.githubusercontent.com/nvm-sh/nvm/*|\
     https://github.com/starship/starship/*)
       class='official upstream repository' ;;
-    https://get.sdkman.io*|https://repo.anaconda.com/*|https://chatgpt.com/*|\
+    https://get.sdkman.io*|https://repo.anaconda.com/*|https://releases.openai.com/*|\
     https://claude.ai/*|https://gh.io/copilot-install*|https://download.docker.com/*|\
     https://desktop.docker.com/*|https://packages.microsoft.com/*|https://dbeaver.io/*|\
     https://api.github.com/repos/usebruno/bruno/*|https://data.services.jetbrains.com/*)
