@@ -10,9 +10,9 @@ fi
 
 typeset -a _workstation_plugin_candidates
 _workstation_plugin_candidates=(
-  "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
   /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
   /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+  "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 )
 for _workstation_plugin in "${_workstation_plugin_candidates[@]}"; do
   if (( ! $+functions[_zsh_autosuggest_start] )) && [[ -r "$_workstation_plugin" ]]; then
@@ -45,9 +45,9 @@ ZSH_HIGHLIGHT_STYLES[redirection]='fg=magenta'
 ZSH_HIGHLIGHT_STYLES[comment]='fg=8'
 
 _workstation_plugin_candidates=(
-  "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
   /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
   /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 )
 for _workstation_plugin in "${_workstation_plugin_candidates[@]}"; do
   if (( ! $+functions[_zsh_highlight] )) && [[ -r "$_workstation_plugin" ]]; then

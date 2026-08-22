@@ -50,8 +50,8 @@ I nomi degli alias SSH dipendono dai valori inseriti in add-git-identity.sh.
 INFO
 }
 
-if [[ "${1:-}" == --info ]]; then
-  (( $# == 1 )) || die "--info non accetta altri argomenti."
+if [[ "${1:-}" == --info || "${1:-}" == --help || "${1:-}" == -h ]]; then
+  (( $# == 1 )) || die "--help/--info non accettano altri argomenti."
   show_info
   exit 0
 fi
@@ -93,7 +93,7 @@ while (($#)); do
       (( $# == 1 )) || die "--set-wallpaper non accetta altri argomenti."
       exec "$ROOT_DIR/bin/set-wallpaper.sh"
       ;;
-    *) die "Opzione non valida: $1. Usa --info per l'elenco dei comandi." ;;
+    *) die "Opzione non valida: $1. Usa --help per l'elenco dei comandi." ;;
   esac
   shift
 done

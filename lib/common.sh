@@ -86,21 +86,23 @@ validate_config() {
   local -a source_vars=(
     OH_MY_ZSH_COMMIT OH_MY_ZSH_INSTALL_URL OH_MY_ZSH_INSTALL_SHA256
     STARSHIP_VERSION STARSHIP_ARCHIVE_URL STARSHIP_ARCHIVE_SHA256
-    ZSH_SYNTAX_HIGHLIGHTING_REPO_URL ZSH_SYNTAX_HIGHLIGHTING_COMMIT
-    ZSH_AUTOSUGGESTIONS_REPO_URL ZSH_AUTOSUGGESTIONS_COMMIT
-    SDKMAN_INSTALL_URL NVM_INSTALL_URL MINICONDA_INSTALLER_URL
-    DOCKER_REPO_URL DOCKER_DESKTOP_RPM_URL VSCODE_GPG_KEY_URL VSCODE_REPO_BASEURL
-    FLATHUB_REPO_URL DBEAVER_RPM_URL BRUNO_RELEASES_API_URL JETBRAINS_TOOLBOX_API_URL
+    SDKMAN_INSTALL_URL NVM_VERSION NVM_INSTALL_URL NVM_INSTALL_SHA256
+    MINICONDA_VERSION MINICONDA_INSTALLER_URL MINICONDA_INSTALLER_SHA256
+    CODEX_INSTALL_URL CLAUDE_INSTALL_URL COPILOT_INSTALL_URL
+    DOCKER_REPO_URL DOCKER_GPG_KEY_URL DOCKER_GPG_FINGERPRINT DOCKER_DESKTOP_VERSION
+    DOCKER_DESKTOP_RPM_URL DOCKER_DESKTOP_RPM_SHA256
+    VSCODE_GPG_KEY_URL VSCODE_REPO_BASEURL
+    FLATHUB_REPO_URL DBEAVER_VERSION DBEAVER_RPM_URL DBEAVER_RPM_SHA256_URL
+    BRUNO_RELEASES_API_URL JETBRAINS_TOOLBOX_API_URL
   )
   for source_name in "${source_vars[@]}"; do
     [[ -n "${!source_name-}" ]] || die "$source_name non può essere vuoto (config/sources.env)."
   done
 
-  local digest_name
-  for digest_name in OH_MY_ZSH_COMMIT ZSH_SYNTAX_HIGHLIGHTING_COMMIT ZSH_AUTOSUGGESTIONS_COMMIT; do
-    [[ "${!digest_name}" =~ ^[0-9a-f]{40}$ ]] || die "$digest_name deve essere uno SHA Git completo."
-  done
-  for digest_name in OH_MY_ZSH_INSTALL_SHA256 STARSHIP_ARCHIVE_SHA256; do
+  [[ "$OH_MY_ZSH_COMMIT" =~ ^[0-9a-f]{40}$ ]] ||
+    die "OH_MY_ZSH_COMMIT deve essere uno SHA Git completo."
+  for digest_name in OH_MY_ZSH_INSTALL_SHA256 STARSHIP_ARCHIVE_SHA256 NVM_INSTALL_SHA256 \
+    MINICONDA_INSTALLER_SHA256 DOCKER_DESKTOP_RPM_SHA256; do
     [[ "${!digest_name}" =~ ^[0-9a-f]{64}$ ]] || die "$digest_name deve essere uno SHA-256 valido."
   done
 }
@@ -148,4 +150,11 @@ download() {
   local url=$1 output=$2
   mkdir -p "$(dirname "$output")"
   curl --fail --location --retry 3 --retry-delay 2 --output "$output" "$url"
+}
+
+download_verified() {
+  local url=$1 output=$2 expected_sha256=$3
+  download "$url" "$output"
+  printf '%s  %s\n' "$expected_sha256" "$output" | sha256sum --check --status ||
+    die "Checksum SHA-256 non valido per $url"
 }

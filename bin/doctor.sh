@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set +u
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 [[ -f "$HOME/.config/workstation-setup/env.zsh" ]] && source "$HOME/.config/workstation-setup/env.zsh"
 
 check() {
@@ -190,7 +191,7 @@ terminal_list="${XDG_CONFIG_HOME:-$HOME/.config}/xdg-terminals.list"
 if grep -Fq '# workstation-setup: managed default terminal' "$terminal_list" 2>/dev/null; then
   check 'xdg-terminal-exec' xdg-terminal-exec
   if command -v xdg-terminal-exec >/dev/null 2>&1; then
-    default_terminal="$(xdg-terminal-exec --print-id 2>/dev/null || true)"
+    default_terminal="$(XTE_CACHE_ENABLED=false xdg-terminal-exec --print-id 2>/dev/null || true)"
     [[ "$default_terminal" == kitty.desktop ]] &&
       printf 'OK   %-20s %s\n' 'Terminale default' "$default_terminal" ||
       printf 'WARN %-20s %s\n' 'Terminale default' "${default_terminal:-non rilevato}"
@@ -206,7 +207,8 @@ if grep -Fq '# workstation-setup: managed tmux config' "$tmux_config" 2>/dev/nul
   if command -v tmux >/dev/null 2>&1; then
     tmux -V | sed 's/^/OK   tmux version         /'
     doctor_socket="workstation-setup-doctor-$$"
-    if tmux -L "$doctor_socket" -f "$tmux_config" new-session -d -s workstation-setup-doctor 2>/dev/null; then
+    tmux_error="$(mktemp)"
+    if tmux -L "$doctor_socket" -f "$tmux_config" new-session -d -s workstation-setup-doctor 2>"$tmux_error"; then
       printf 'OK   %-20s\n' 'tmux parsing'
       for query in 'mouse:on' 'default-terminal:tmux-256color' 'base-index:1' 'history-limit:100000'; do
         option="${query%%:*}" expected="${query#*:}"
@@ -225,9 +227,12 @@ if grep -Fq '# workstation-setup: managed tmux config' "$tmux_config" 2>/dev/nul
         printf 'OK   %-20s %s\n' 'tmux true color' 'xterm-kitty:RGB:clipboard' ||
         printf 'WARN %-20s\n' 'tmux true color'
       tmux -L "$doctor_socket" kill-server 2>/dev/null || true
+    elif grep -Fq 'Operation not permitted' "$tmux_error"; then
+      printf 'WARN %-20s %s\n' 'tmux parsing' 'socket vietato dalla sandbox; test repository superato'
     else
       printf 'FAIL %-20s %s\n' 'tmux parsing' "$tmux_config"
     fi
+    rm -f -- "$tmux_error"
   fi
   duplicate_count="$(grep -Fc '# workstation-setup: managed tmux config' "$tmux_config" || true)"
   [[ "$duplicate_count" == 1 ]] && printf 'OK   %-20s\n' 'tmux managed file' ||
@@ -276,3 +281,6 @@ Virtualizzazione:
   [[ -e /dev/kvm ]] && echo 'KVM: disponibile (/dev/kvm).' || echo 'KVM: non disponibile.'
   virsh -c qemu:///system list --all >/dev/null 2>&1 &&     echo 'libvirt: qemu:///system raggiungibile.' ||     echo 'libvirt: qemu:///system non raggiungibile nella sessione corrente.'
 fi
+
+printf '\nAudit provenienza locale:\n'
+"$ROOT_DIR/bin/provenance-audit.sh"

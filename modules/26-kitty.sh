@@ -27,5 +27,16 @@ if [[ "$SET_KITTY_AS_DEFAULT_TERMINAL" == true ]]; then
     "$ROOT_DIR/templates/xdg-terminals.list" \
     "$terminal_list" \
     '# workstation-setup: managed default terminal'
+  desktop_name="${XDG_CURRENT_DESKTOP%%:*}"
+  if [[ -n "$desktop_name" ]]; then
+    desktop_name="${desktop_name,,}"
+    desktop_terminal_list="${XDG_CONFIG_HOME:-$HOME/.config}/${desktop_name}-xdg-terminals.list"
+    install_managed_config \
+      "$ROOT_DIR/templates/xdg-terminals.list" \
+      "$desktop_terminal_list" \
+      '# workstation-setup: managed default terminal'
+  fi
+  # La cache può mantenere il terminale selezionato prima di questa modifica.
+  rm -f -- "${XDG_CACHE_HOME:-$HOME/.cache}/xdg-terminal-exec"
   log "Kitty impostato come terminale predefinito in $terminal_list"
 fi

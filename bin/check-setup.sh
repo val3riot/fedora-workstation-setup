@@ -8,9 +8,9 @@ failed=0
 
 while IFS= read -r -d '' script; do
   if bash -n "$script"; then
-    printf 'OK   %s\n' "${script#$ROOT_DIR/}"
+    printf 'OK   %s\n' "${script#"$ROOT_DIR"/}"
   else
-    printf 'FAIL %s\n' "${script#$ROOT_DIR/}" >&2
+    printf 'FAIL %s\n' "${script#"$ROOT_DIR"/}" >&2
     failed=1
   fi
 done < <(find "$ROOT_DIR" -type f -name '*.sh' -print0 | sort -z)

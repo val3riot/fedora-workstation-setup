@@ -16,7 +16,7 @@ Lo script deve essere avviato come utente normale: richiede `sudo` solo per le o
 - NVM con Node LTS;
 - Miniconda senza attivazione automatica di `base`;
 - LaTeX/TeX Live tramite i pacchetti ufficiali Fedora;
-- Codex, Claude Code e GitHub Copilot CLI con home sotto `~/Tools/Agents`;
+- Codex, Claude Code e GitHub Copilot CLI tramite installer nativi ufficiali;
 - VS Code tramite repository RPM Microsoft;
 - JetBrains Toolbox in `~/Tools`;
 - DBeaver e Bruno via RPM;
@@ -59,13 +59,13 @@ qualunque profilo, oppure usare da sola con il profilo development predefinito:
 ./install.sh --config-zsh-theme
 ```
 
-Installa `zsh` dai repository Fedora, Starship dal suo archivio ufficiale e i due
-plugin nei custom plugin di Oh My Zsh; riutilizza Oh My Zsh se presente e non modifica né duplica la
+Installa `zsh` e i due plugin dai repository Fedora, Starship dal suo archivio
+upstream ufficiale; riutilizza Oh My Zsh se presente e non modifica né duplica la
 lista `plugins=(...)`. Starship mostra in modo contestuale directory, Git e operazioni
 in corso, Docker, Kubernetes/namespace, Java, Maven, Node, Python, Conda, Vagrant,
 durata dei comandi lenti, errori e job. Hostname e IPv4 compaiono soltanto via SSH.
 
-URL, versione Starship, checksum SHA-256 e commit completi dei plugin sono centralizzati
+URL, versione Starship e checksum SHA-256 sono centralizzati
 in `config/sources.env`. Anche l'installer Oh My Zsh è fissato a un commit e verificato
 prima dell'esecuzione. I file gestiti sono `~/.config/starship.toml` e
 `~/.config/workstation-setup/zsh-theme.zsh`; `.zshrc` riceve un solo blocco marcato.
@@ -234,7 +234,7 @@ Per visualizzare una guida rapida dei comandi disponibili e degli alias creati,
 senza eseguire l'installazione:
 
 ```bash
-./install.sh --info
+./install.sh --help
 ```
 
 Per verificarne poi l’installazione:
@@ -244,6 +244,18 @@ flatpak info --user com.discordapp.Discord
 flatpak info --user md.obsidian.Obsidian
 rpm -q thunderbird libreoffice-core
 ./bin/doctor.sh
+```
+
+## Provenienza e sicurezza
+
+La policy e il report sono in `AUDIT.md`. Il doctor include il controllo locale di
+path, RPM, repository vendor, copie shadowing e metodo degli agenti; la verifica URL
+online resta separata per non rendere il doctor dipendente dalla rete:
+
+```bash
+./bin/provenance-audit.sh
+./bin/audit-urls.sh --online
+./bin/check-secrets.sh
 ```
 
 ## Aggiornamento del sistema e delle app

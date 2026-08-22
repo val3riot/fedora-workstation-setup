@@ -5,7 +5,7 @@ load_config "$ROOT_DIR"
 
 if [[ "$INSTALL_OH_MY_ZSH" == true && ! -d "$HOME/.oh-my-zsh" ]]; then
   installer="$TOOLS_DIR/tmp/install-oh-my-zsh.sh"
-  download "$OH_MY_ZSH_INSTALL_URL" "$installer"
+  download_verified "$OH_MY_ZSH_INSTALL_URL" "$installer" "$OH_MY_ZSH_INSTALL_SHA256"
   RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh "$installer" --unattended
 fi
 
@@ -27,7 +27,7 @@ cat > "$env_file" <<ENV
 export TOOLS_DIR="$TOOLS_DIR"
 export PROJECTS_DIR="$PROJECTS_DIR"
 export AGENTS_ROOT="$TOOLS_DIR/Agents"
-export CODEX_HOME="\$AGENTS_ROOT/codex"
+export CODEX_HOME="$HOME/.codex"
 export CLAUDE_CONFIG_DIR="\$AGENTS_ROOT/claude"
 export COPILOT_HOME="\$AGENTS_ROOT/copilot"
 export NVM_DIR="$TOOLS_DIR/nvm"

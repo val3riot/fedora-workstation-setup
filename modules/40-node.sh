@@ -8,7 +8,7 @@ export NVM_DIR="$TOOLS_DIR/nvm"
 if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
   mkdir -p "$NVM_DIR"
   installer="$TOOLS_DIR/tmp/install-nvm.sh"
-  download "$NVM_INSTALL_URL" "$installer"
+  download_verified "$NVM_INSTALL_URL" "$installer" "$NVM_INSTALL_SHA256"
   PROFILE=/dev/null bash "$installer"
 fi
 # shellcheck disable=SC1090

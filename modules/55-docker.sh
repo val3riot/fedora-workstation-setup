@@ -93,6 +93,12 @@ setup_rootless_docker() {
 
 if [[ "$INSTALL_DOCKER" == true ]]; then
   log "Configurazione repository Docker ufficiale"
+  docker_gpg_key="$TOOLS_DIR/tmp/docker-fedora.gpg"
+  download "$DOCKER_GPG_KEY_URL" "$docker_gpg_key"
+  actual_fingerprint="$(gpg --show-keys --with-colons "$docker_gpg_key" 2>/dev/null |
+    awk -F: '$1 == "fpr" { print $10; exit }')"
+  [[ "$actual_fingerprint" == "$DOCKER_GPG_FINGERPRINT" ]] ||
+    die "Fingerprint GPG Docker inatteso: ${actual_fingerprint:-non rilevato}"
   if [[ ! -f /etc/yum.repos.d/docker-ce.repo ]]; then
     if ! dnf config-manager --help >/dev/null 2>&1; then
       install_available_packages dnf5-plugins
@@ -123,9 +129,10 @@ if [[ "$INSTALL_DOCKER_DESKTOP" == true ]]; then
 
   [[ -e /dev/kvm ]] || warn "/dev/kvm non presente: verifica VT-x/AMD-V nel firmware."
 
-  if ! rpm -q docker-desktop >/dev/null 2>&1; then
+  installed_desktop_version="$(rpm -q --qf '%{VERSION}' docker-desktop 2>/dev/null || true)"
+  if [[ "$installed_desktop_version" != "$DOCKER_DESKTOP_VERSION" ]]; then
     desktop_rpm="$TOOLS_DIR/tmp/docker-desktop-x86_64.rpm"
-    download "$DOCKER_DESKTOP_RPM_URL" "$desktop_rpm"
+    download_verified "$DOCKER_DESKTOP_RPM_URL" "$desktop_rpm" "$DOCKER_DESKTOP_RPM_SHA256"
     sudo dnf install -y "$desktop_rpm"
   fi
 
